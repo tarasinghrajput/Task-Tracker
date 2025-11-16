@@ -5,32 +5,24 @@ import '../App.css'
 function TimerDisplay() {
     const [ time, setTime ] = useState(0)
     const [ isRunning, setIsRunning ] = useState(false)
-    const [ isReset, setIsReset ] = useState(false)
     const intervalRef = useRef(null)
-    const timeHr = 0
-    const timeMin = 0
-    const timeSec = 0
 
     useEffect(() => {
         if(isRunning) {
             intervalRef.current = setInterval(() => {
-                if(time >= 60) {
-                    setTime(0)
-                } else {
-                    setTime(prevTime => prevTime + 1)
-                }
+                setTime(prevTime => prevTime + 1)
             }, 1000)
         } else {
             clearInterval(intervalRef.current)
         }
 
         return () => clearInterval(intervalRef.current)
-    }, [isRunning, isReset])
+    }, [isRunning])
 
     function formatTime(timeInSec) {
-        const hours = Math.floor(timeInSec / 36000)
-        const minutes = Math.floor((timeInSec % 36000) / 60)
-        const seconds = Math.floor(timeInSec)
+        const hours = Math.floor(timeInSec / 3600)
+        const minutes = Math.floor((timeInSec % 3600) / 60)
+        const seconds = Math.floor((timeInSec % 60))
 
         return (
             `${String(hours).padStart(2,'0')}:` +
@@ -52,7 +44,7 @@ function TimerDisplay() {
                 <button className="pauseTimer" onClick={() => setIsRunning(false)} disabled={!isRunning}>
                     <img src="/pause.svg" alt="Pause icon" />
                 </button>
-                <button className="resetTimer" onClick={() => { setTime(0), setIsRunning(false), setIsReset(true) }} disabled={!isRunning}>
+                <button className="resetTimer" onClick={() => { setTime(0), setIsRunning(false) }}>
                     <img src="/reset.svg" alt="Reset icon" />
                 </button>
             </div>
