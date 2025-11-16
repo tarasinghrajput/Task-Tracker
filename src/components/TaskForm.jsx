@@ -5,7 +5,7 @@ function TaskForm() {
     const navigate = useNavigate()
     const location = useLocation()
     const receivedState = location.state
-    const tasks = []
+    const tasks = JSON.parse(localStorage.getItem('task'))
 
     useEffect(() => {
         if(tasks.length > 0) {

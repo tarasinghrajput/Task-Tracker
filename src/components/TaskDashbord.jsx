@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 
 function TaskDashboard() {
@@ -14,12 +14,23 @@ function TaskDashboard() {
             <div className="taskDashboardList">
                 <h2>Task List</h2>
                 <hr />
-                <ul className="taskList">
-                    {tasks[0].map(task => (
-                        <li className="taskListItem" key={task.id}>{task.taskDate} - {task.taskTitle}</li>
-                    ))
-                    }
-                </ul>
+                <table className="taskList" border="5">
+                    <tbody>
+                        <tr>
+                            <th>Date</th>
+                            <th>Title</th>
+                            <th>Time Elapsed</th>
+                        </tr>
+                        {tasks[0].map(task => (
+                            <tr>
+                                <td>{task.taskDate}</td>
+                                <td>{task.taskTitle}</td>
+                                <td>{task.taskTimeElapsed}</td>
+                            </tr>
+                        ))
+                        }
+                    </tbody>
+                </table>
             </div>
 
             <button onClick={() => navigate('/')}>Add Task</button>
