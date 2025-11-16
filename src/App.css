@@ -61,3 +61,24 @@
   height: 30px;
   padding: 0;
 }
+
+.taskFormSection {
+  background-color: #e4e4e4;
+  padding: 30px;
+  border-radius: 8px;
+}
+
+.taskFormSection h2 {
+  margin: 0px 0px 20px 0px;
+}
+
+.tf-form  form{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+section > button {
+  margin-top: 20px;
+}

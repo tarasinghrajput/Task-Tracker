@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import '../App.css'
+import { useNavigate } from 'react-router-dom'
 
 
 function TimerDisplay() {
     const [ time, setTime ] = useState(0)
     const [ isRunning, setIsRunning ] = useState(false)
     const intervalRef = useRef(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         if(isRunning) {
@@ -31,10 +33,13 @@ function TimerDisplay() {
         )
     }
 
+    const handleNextButton = () => {
+        navigate('/taskForm', { state: formatTime(time) })
+    }
+
     return (
         <section>
             <div className="timeHeading">
-                <h1>This is the Timer</h1>
                 <h2>{formatTime(time)}</h2>
             </div>
             <div className="timerControls">
@@ -48,6 +53,7 @@ function TimerDisplay() {
                     <img src="/reset.svg" alt="Reset icon" />
                 </button>
             </div>
+            <button onClick={handleNextButton}>Next</button>
         </section>
     )
 }
