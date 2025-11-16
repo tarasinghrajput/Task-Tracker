@@ -10,8 +10,6 @@ function TaskForm() {
     useEffect(() => {
         if(tasks.length > 0) {
             updateLocalStorage()
-        } else {
-            localStorage.clear()
         }
     }, [tasks])
 
@@ -56,26 +54,26 @@ function TaskForm() {
             </div>
             <div className="tf-form">
                 <form onSubmit={handleTaskFormData} id='tf-form'>
-                    <input type="date" name="tf-date" value="2004-06-29"/>
+                    <input type="date" name="tf-date" defaultValue="2004-06-29"/>
                     <input type="hidden" name="tf-timeElapsed" value={receivedState}/>
                     <label htmlFor="tf-taskCategory">
                         Task Category
                         <select name="tf-taskCategory" id="tf-taskCategory">
-                            <option value="error-fix" selected>Error Fix</option>
+                            <option value="error-fix" defaultValue>Error Fix</option>
                             <option value="seo">SEO</option>
                         </select>
                     </label>
                     <label htmlFor="tf-taskType">
                         Task Type
-                        <input type="text" name="tf-taskType" id="tf-taskType" value="Default TaskForm Type" />
+                        <input type="text" name="tf-taskType" id="tf-taskType" defaultValue="Default TaskForm Type" />
                     </label>
                     <label htmlFor="tf-taskTitle">
                         Task Title
-                        <input type="text" name="tf-taskTitle" id="tf-taskTitle" value="Default TaskForm Title" />
+                        <input type="text" name="tf-taskTitle" id="tf-taskTitle" defaultValue="Default TaskForm Title" />
                     </label>
                     <label htmlFor="tf-taskDescription">
                         Task Description
-                        <textarea name="tf-taskDescription" id="tf-taskDescription" value="Default TaskForm Description"></textarea>
+                        <textarea name="tf-taskDescription" id="tf-taskDescription" defaultValue="Default TaskForm Description"></textarea>
                     </label>
                     <label htmlFor="tf-taskPriority">
                         Task Priority
@@ -85,7 +83,7 @@ function TaskForm() {
                         Task Status
                         <select name="tf-taskStatus" id="tf-taskStatus">
                             <option value="pending">Pending</option>
-                            <option value="in-progress" selected>In Progress</option>
+                            <option value="in-progress" defaultValue>In Progress</option>
                             <option value="completed">Completed</option>
                             <option value="on-hold">On Hold</option>
                         </select>
