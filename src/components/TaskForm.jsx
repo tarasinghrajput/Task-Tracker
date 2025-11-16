@@ -5,22 +5,22 @@ function TaskForm() {
     const navigate = useNavigate()
     const location = useLocation()
     const receivedState = location.state
-    const tasksRef = useRef([])
+    const tasks = []
 
     useEffect(() => {
-        if(tasksRef.current.length > 0) {
+        if(tasks.length > 0) {
             updateLocalStorage()
         } else {
             localStorage.clear()
         }
-    }, [tasksRef])
+    }, [tasks])
 
     const handleTaskFormData = (event) => {
         event.preventDefault()
         const form = document.getElementById('tf-form')
         const formData = new FormData(form)
-
-        tasksRef.current = {
+        const newTask = {
+            id: Date.now(),
             taskTimeElapsed: formData.get('tf-timeElapsed'),
             taskDate: formData.get('tf-date'),
             taskCategory: formData.get('tf-taskCategory'),
@@ -31,6 +31,8 @@ function TaskForm() {
             taskStatus: formData.get('tf-taskStatus')
         }
 
+        tasks.push(newTask)
+
         updateLocalStorage()
     }
 
@@ -39,7 +41,7 @@ function TaskForm() {
     }
 
     function updateLocalStorage() {
-        localStorage.setItem('task', JSON.stringify(tasksRef))
+        localStorage.setItem('task', JSON.stringify(tasks))
     }
 
     return (
@@ -47,6 +49,7 @@ function TaskForm() {
             <div className="tf-heading">
                 <nav>
                     <button onClick={() => navigate('/')}>&larr; back</button>
+                    <button onClick={() => navigate('/taskDashboard')}>&#127968; Dashboard</button>
                 </nav>
                 <h2>Task Form Entries</h2>
                 <h3>TaskTime: {receivedState}</h3>

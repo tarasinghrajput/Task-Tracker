@@ -4,7 +4,8 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import TaskTimer from './components/TaskTimer'
 import TaskForm from './components/TaskForm'
-import { BrowserRouter, Link, Routes, Route } from 'react-router-dom'
+import TaskDashboard from './components/TaskDashbord'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<TaskTimer />} />
         <Route path="/taskForm" element={<TaskForm />} />
+        <Route path="/taskDashboard" element={<TaskDashboard />} />
       </Routes>
     </BrowserRouter>
   )
