@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { ToastContainer, toast } from 'react-toastify'
 
 function TaskForm() {
     const navigate = useNavigate()
@@ -30,8 +31,11 @@ function TaskForm() {
         }
 
         tasks.push(newTask)
-
         updateLocalStorage()
+
+        toast(`${newTask.taskTitle} added successfully`)
+        event.target.reset()
+        navigate('/')
     }
 
     const handleTaskSubmit = () => {
@@ -91,6 +95,7 @@ function TaskForm() {
                     <input type="submit" value="Add Task" />
                 </form>
             </div>
+            <ToastContainer/>
         </section>
     )
 }
