@@ -46,8 +46,8 @@ function TaskForm() {
         <section className="taskFormSection">
             <div className="tf-heading">
                 <nav>
-                    <button onClick={() => navigate('/')}>&larr; back</button>
-                    <button onClick={() => navigate('/taskDashboard')}>&#127968; Dashboard</button>
+                    <button onClick={() => navigate('/taskTimer')}>&larr; back</button>
+                    <button onClick={() => navigate('/')}>&#127968; Dashboard</button>
                 </nav>
                 <h2>Task Form Entries</h2>
                 <h3>TaskTime: {receivedState}</h3>

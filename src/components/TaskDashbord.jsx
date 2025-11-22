@@ -33,7 +33,7 @@ function TaskDashboard() {
                 </table>
             </div>
 
-            <button onClick={() => navigate('/')}>Add Task</button>
+            <button onClick={() => navigate('/taskTimer')}>Add Task</button>
         </section>
     )
 }

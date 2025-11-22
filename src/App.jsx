@@ -14,9 +14,9 @@ function App() {
     <BrowserRouter>
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<TaskTimer />} />
+        <Route path="/" element={<TaskDashboard />} />
         <Route path="/taskForm" element={<TaskForm />} />
-        <Route path="/taskDashboard" element={<TaskDashboard />} />
+        <Route path="/taskTimer" element={<TaskTimer />} />
       </Routes>
     </BrowserRouter>
   )
