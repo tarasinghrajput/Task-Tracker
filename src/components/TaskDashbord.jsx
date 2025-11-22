@@ -22,7 +22,7 @@ function TaskDashboard() {
                             <th>Time Elapsed</th>
                         </tr>
                         {tasks[0].map(task => (
-                            <tr>
+                            <tr key={task.id}>
                                 <td>{task.taskDate}</td>
                                 <td>{task.taskTitle}</td>
                                 <td>{task.taskTimeElapsed}</td>

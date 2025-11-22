@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
+import { saveTask } from '../api'
 
 function TaskForm() {
     const navigate = useNavigate()
     const location = useLocation()
     const receivedState = location.state
-    const tasks = JSON.parse(localStorage.getItem('task'))
+    const tasks = JSON.parse(localStorage.getItem('task')) || []
 
-    useEffect(() => {
-        if(tasks.length > 0) {
-            updateLocalStorage()
-        }
-    }, [tasks])
+    // useEffect(() => {
+    //     if(tasks.length > 0) {
+    //         updateLocalStorage()
+    //     }
+    // }, [tasks])
 
     const handleTaskFormData = (event) => {
         event.preventDefault()
@@ -33,9 +34,18 @@ function TaskForm() {
         tasks.push(newTask)
         updateLocalStorage()
 
-        toast(`${newTask.taskTitle} added successfully`)
-        event.target.reset()
-        navigate('/')
+        saveTask(newTask)
+        .then(() => {
+            console.log("Synched to Sheet")
+            toast.success(`${newTask.taskTitle} added successfully`)
+            event.target.reset()
+            navigate('/')
+        })
+        .catch((error) => {
+            console.error("Failed to sync:", error)
+            toast.error(`Failed to add ${newTask.taskTitle}: ${error.message || 'Unknown error'}`)
+        })
+
     }
 
     const handleTaskSubmit = () => {
