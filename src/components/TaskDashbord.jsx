@@ -14,23 +14,25 @@ function TaskDashboard() {
             <div className="taskDashboardList">
                 <h2>Task List</h2>
                 <hr />
-                <table className="taskList" border="5">
-                    <tbody>
-                        <tr>
-                            <th>Date</th>
-                            <th>Title</th>
-                            <th>Time Elapsed</th>
-                        </tr>
-                        {tasks[0].map(task => (
-                            <tr key={task.id}>
-                                <td>{task.taskDate}</td>
-                                <td>{task.taskTitle}</td>
-                                <td>{task.taskTimeElapsed}</td>
+                {!tasks ?
+                    <table className="taskList" border="5">
+                        <tbody>
+                            <tr>
+                                <th>Date</th>
+                                <th>Title</th>
+                                <th>Time Elapsed</th>
                             </tr>
-                        ))
-                        }
-                    </tbody>
-                </table>
+                            {tasks[0].map(task => (
+                                <tr key={task.id}>
+                                    <td>{task.taskDate}</td>
+                                    <td>{task.taskTitle}</td>
+                                    <td>{task.taskTimeElapsed}</td>
+                                </tr>
+                            ))
+                            }
+                        </tbody>
+                    </table> : <p>No Tasks Added</p>
+                }
             </div>
 
             <button onClick={() => navigate('/taskTimer')}>Add Task</button>
