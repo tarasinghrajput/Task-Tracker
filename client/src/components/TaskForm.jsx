@@ -26,24 +26,6 @@ function TaskForm() {
 
         tasks.push(newTask)
 
-        try {
-            const response = await fetch(`/api/tasks/${newTask.id}`, {
-                method: 'POST',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newTask),
-            })
-
-            if (!response.ok) {
-                toast.error(`Your submission was not successful`)
-                throw new Error(`HTTP error! status: ${response.status}`)
-            }
-
-            const result = await response.json()
-            toast.success(`Your task is successfully submitted`)
-            event.target.reset()
-        } catch (error) {
-            toast.error(`Your submission is failed due to ${error}`)
-        }
     }
 
     return (
