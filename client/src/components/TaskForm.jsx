@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+// import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
 
@@ -7,12 +7,6 @@ function TaskForm() {
     const location = useLocation()
     const receivedState = location.state
     const tasks = JSON.parse(localStorage.getItem('task')) || []
-
-    // useEffect(() => {
-    //     if(tasks.length > 0) {
-    //         updateLocalStorage()
-    //     }
-    // }, [tasks])
 
     const handleTaskFormData = async (event) => {
         event.preventDefault()
@@ -50,12 +44,6 @@ function TaskForm() {
         } catch (error) {
             toast.error(`Your submission is failed due to ${error}`)
         }
-
-
-    }
-
-    function updateLocalStorage() {
-        localStorage.setItem('task', JSON.stringify(tasks))
     }
 
     return (
