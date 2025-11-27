@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
-import { saveTask } from '../api'
 
 function TaskForm() {
     const navigate = useNavigate()
@@ -15,7 +14,7 @@ function TaskForm() {
     //     }
     // }, [tasks])
 
-    const handleTaskFormData = (event) => {
+    const handleTaskFormData = async (event) => {
         event.preventDefault()
         const form = document.getElementById('tf-form')
         const formData = new FormData(form)
@@ -32,23 +31,26 @@ function TaskForm() {
         }
 
         tasks.push(newTask)
-        updateLocalStorage()
 
-        saveTask(newTask)
-        .then(() => {
-            console.log("Synched to Sheet")
-            toast.success(`${newTask.taskTitle} added successfully`)
+        try {
+            const response = await fetch(`/api/tasks/${newTask.id}`, {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newTask),
+            })
+
+            if (!response.ok) {
+                toast.error(`Your submission was not successful`)
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            const result = await response.json()
+            toast.success(`Your task is successfully submitted`)
             event.target.reset()
-            navigate('/')
-        })
-        .catch((error) => {
-            console.error("Failed to sync:", error)
-            toast.error(`Failed to add ${newTask.taskTitle}: ${error.message || 'Unknown error'}`)
-        })
+        } catch (error) {
+            toast.error(`Your submission is failed due to ${error}`)
+        }
 
-    }
-
-    const handleTaskSubmit = () => {
 
     }
 
@@ -68,8 +70,8 @@ function TaskForm() {
             </div>
             <div className="tf-form">
                 <form onSubmit={handleTaskFormData} id='tf-form'>
-                    <input type="date" name="tf-date" defaultValue="2004-06-29"/>
-                    <input type="hidden" name="tf-timeElapsed" value={receivedState}/>
+                    <input type="date" name="tf-date" defaultValue="2004-06-29" />
+                    <input type="hidden" name="tf-timeElapsed" value={receivedState} />
                     <label htmlFor="tf-taskCategory">
                         Task Category
                         <select name="tf-taskCategory" id="tf-taskCategory">
@@ -105,7 +107,7 @@ function TaskForm() {
                     <input type="submit" value="Add Task" />
                 </form>
             </div>
-            <ToastContainer/>
+            <ToastContainer />
         </section>
     )
 }
