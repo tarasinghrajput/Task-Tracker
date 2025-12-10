@@ -5,7 +5,9 @@ import './App.css'
 import TaskTimer from './components/TaskTimer'
 import TaskForm from './components/TaskForm'
 import TaskDashboard from './components/TaskDashbord'
+import LoginForm from './components/LoginForm'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
 
 function App() {
   const [count, setCount] = useState(0)
@@ -15,6 +17,7 @@ function App() {
       {/* Routes */}
       <Routes>
         <Route path="/" element={<TaskDashboard />} />
+        <Route path="/login" element={<LoginForm/>}/>
         <Route path="/taskForm" element={<TaskForm />} />
         <Route path="/taskTimer" element={<TaskTimer />} />
       </Routes>
