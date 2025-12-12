@@ -13,15 +13,16 @@ const sheetSchema = new Schema(
 
 const userSchema = new Schema(
     {
-        name: { type: String, required: true, trim: true, },
+        name: { type: String, trim: true, },
         email: { type: String, required: true, unique: true, lowercase: true, },
         passwordHash: { type: String, required: true, },
         isActive: { type: Boolean, default: true, },
-        isVerified: { type: Boolean, default: false, },
-        otpHash: { type: String, },
-        otpExpiresAt: { type: Date, },
+        isEmailVerified: { type: Boolean, default: false, },
+        refreshTokenId: { type: String },
         createdAt: { type: Date, required: true, },
         updatedAt: { type: Date, },
+        passwordResetToken: { type: String },
+        passwordResetExpires: { type: Date },
         sheets: [sheetSchema],
     },
     { timestamps: true }

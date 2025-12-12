@@ -17,7 +17,7 @@ function LoginForm() {
         return Object.keys(tempErrors).length === 0
     }
 
-    const handleSignIn = (event) => {
+    const handleSignIn = async (event) => {
         event.preventDefault()
         const form = document.getElementById('login-form')
         const formData = new FormData(form)
@@ -29,7 +29,19 @@ function LoginForm() {
         if(!validate(formEmail, formPassword)) {
             toast.error(`Login unsuccessful`)
         } else {
-            toast(`Login successful`)
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    body: {email, password},
+                })
+                if(!response.ok) {
+                    console.error("The API failed")
+                } else {
+                    toast(`Login successful`)
+                }
+            } catch (error) {
+                console.error("Login unsuccessful", error)
+            }
         }
     }
 
