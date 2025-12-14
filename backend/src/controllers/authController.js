@@ -1,33 +1,95 @@
 const bcrypt = require('bcryptjs')
 const saltRounds = 12
-// const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 const User = require('../models/User')
-const { validationResult } = require('express-validator')
+// const { validationResult } = require('express-validator')
 
 const register = async (req, res) => {
+    const { formEmail, formPassword } = req.body
+    const secret = process.env.JWT_SECRET
 
-    const errors = validationResult(req)
-    if(!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() })
+    if (!formEmail || !formPassword) {
+        return res.status(401).json({ success: false, message: "Email and Password are required" })
     }
+    try {
+        const existingUser = await User.findOne({ email: formEmail })
+        if (existingUser) {
+            return res.status(402).json({ success: false, message: "Email is registered" })
+        }
+        const hashedPassword = await bcrypt.hash(formPassword, saltRounds)
+        const date = new Date()
+        const createdAt = date.toISOString()
 
-    const { email, password } = req.body
-    const exisiting = await User.findOne({ email })
-    if(exisiting) {
-        res.status(409).json({ message: "User already registered" })
+        const user = new User({ email: formEmail, passwordHash: hashedPassword, createdAt })
+        await user.save()
+
+        const token = jwt.sign({ id: user._id }, secret, { expiresIn: '7d' })
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+
+        return res.status(200).json({ success: true, message: "Registered Successful" })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
     }
+}
 
-    const passwordHash = await bcrypt.hash(password, saltRounds)
-    const createdAt = new Date().toIsoString()
-    const user = await User.create({ email, passwordHash, createdAt })
+const login = async (req, res) => {
+    const { formEmail, formPassword } = req.body
+    
+    if (!formEmail || !formPassword) {
+        return res.status(401).json({ success: false, message: "Email and Password are required" })
+    }
+    try {
+        const user = await User.findOne({email: formEmail})
+        if(!user) {
+            return res.status(402).json({ success: false, message: "Email is not registered" })
+        }
+        
+        const isMatching = await bcrypt.compare(formPassword, user.password)
+        
+        if(!isMatching) {
+            return res.status(403).json({ success: false, message: "Password is incorrect" })
+        }
 
-    await user.save()
+        const token = jwt.sign({ id: user._id }, secret, { expiresIn: '7d' })
 
-    return res.status(201).json({
-        message: "Registered the user successfully"
-    })
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+
+        return res.status(200).json({ success: true, message: "Login Successful" })
+        
+    } catch(error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const logout = async (req, res) => {
+    
+    try {
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+
+        return res.status(200).json({ success: true, message: "Logout Successful" })
+    } catch(error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
 }
 
 module.exports = {
-    register
+    register,
+    login,
+    logout
 }

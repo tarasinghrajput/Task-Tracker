@@ -34,7 +34,8 @@ function LoginForm() {
             try {
                 const data = await fetchAPI('/login', {
                     method: 'POST',
-                    body: JSON.stringify({ formEmail, formPassword })
+                    body: JSON.stringify({ formEmail, formPassword }),
+                    credentials: 'include'
                 })
                 toast('Login Successfull')
                 // setSuccessMessage(data)

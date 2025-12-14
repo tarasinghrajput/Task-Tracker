@@ -13,7 +13,7 @@ const sheetSchema = new Schema(
 
 const userSchema = new Schema(
     {
-        name: { type: String, trim: true, },
+        // name: { type: String, trim: true, },
         email: { type: String, required: true, unique: true, lowercase: true, },
         passwordHash: { type: String, required: true, },
         isActive: { type: Boolean, default: true, },
