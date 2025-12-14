@@ -16,11 +16,12 @@ app.get('/api/health', (req, res) => {
 })
 
 app.post('/api/login', (req, res) => {
-    if(req.body == null) {
+    const { formEmail, formPassword } = req.body
+    if(formEmail === null || formPassword === null) {
         res.status(401).json({message: "email or password is missing in the request"})
     }
 
-    res.status(200).json({ message: "login successfully" })
+    res.status(200).json({ message: `${formEmail}, ${formPassword}` })
 })
 
 app.listen(PORT, () => {
