@@ -31,17 +31,10 @@ function LoginForm() {
         if(!validate(formEmail, formPassword)) {
             toast.error(`Login unsuccessful`)
         } else {
-            try {
-                const response = await fetchAPI('/health')
-                if(!response.ok){ 
-                    console.error('Response was not ok')
-                }
-                const body = await response.json()
-                toast('Login Successfull')
-                setSuccessMessage(body)
-            } catch (error) {
-                console.error("Login unsuccessful", error)
-            }
+            const response = await fetchAPI('/health')
+            const body = await response.json()
+            toast('Login Successfull')
+            setSuccessMessage(body)
         }
     }
 
