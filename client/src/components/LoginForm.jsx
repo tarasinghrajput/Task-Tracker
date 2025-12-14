@@ -1,10 +1,12 @@
 import { ToastContainer, toast } from 'react-toastify'
 import { useState } from 'react'
+import fetchAPI from '../api.js'
 
 function LoginForm() {
     const [ email, setEmail ] = useState('')
     const [ password, setPassword ] = useState('')
     const [ errors, setErrors ] = useState({})
+    const [ successMessage, setSuccessMessage ] = useState({})
 
     function validate(formEmail, formPassword) {
         let tempErrors = {}
@@ -30,15 +32,13 @@ function LoginForm() {
             toast.error(`Login unsuccessful`)
         } else {
             try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    body: {email, password},
-                })
-                if(!response.ok) {
-                    console.error("The API failed")
-                } else {
-                    toast(`Login successful`)
+                const response = await fetchAPI('/health')
+                if(!response.ok){ 
+                    console.error('Response was not ok')
                 }
+                const body = await response.json()
+                toast('Login Successfull')
+                setSuccessMessage(body)
             } catch (error) {
                 console.error("Login unsuccessful", error)
             }
@@ -61,6 +61,7 @@ function LoginForm() {
                         {errors.password && <p style={{color:'red'}}>{errors.password}</p>}
                     </label>
                     <button>Sign in</button>
+                    {successMessage && <p style={{color:'white'}}>{successMessage.message}</p>}
                     <ToastContainer/>
                 </form>
             </div>
