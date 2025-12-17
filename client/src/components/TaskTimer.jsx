@@ -1,16 +1,22 @@
 import { useState, useEffect, useRef } from 'react'
 import '../App.css'
 import { useNavigate } from 'react-router-dom'
+import { Button } from "@/components/ui/button"
+import {
+    ButtonGroup,
+    ButtonGroupSeparator,
+    ButtonGroupText,
+} from "@/components/ui/button-group"
 
 
 function TimerDisplay() {
-    const [ time, setTime ] = useState(0)
-    const [ isRunning, setIsRunning ] = useState(false)
+    const [time, setTime] = useState(0)
+    const [isRunning, setIsRunning] = useState(false)
     const intervalRef = useRef(null)
     const navigate = useNavigate()
 
     useEffect(() => {
-        if(isRunning) {
+        if (isRunning) {
             intervalRef.current = setInterval(() => {
                 setTime(prevTime => prevTime + 1)
             }, 1000)
@@ -27,9 +33,9 @@ function TimerDisplay() {
         const seconds = Math.floor((timeInSec % 60))
 
         return (
-            `${String(hours).padStart(2,'0')}:` +
-            `${String(minutes).padStart(2,'0')}:` +
-            `${String(seconds).padStart(2,'0')}`
+            `${String(hours).padStart(2, '0')}:` +
+            `${String(minutes).padStart(2, '0')}:` +
+            `${String(seconds).padStart(2, '0')}`
         )
     }
 
@@ -38,22 +44,24 @@ function TimerDisplay() {
     }
 
     return (
-        <section>
+        <section className="taskTimer">
             <div className="timeHeading">
                 <h2>{formatTime(time)}</h2>
             </div>
             <div className="timerControls">
-                <button className="startTimer" onClick={() => setIsRunning(true)} disabled={isRunning}>
-                    <img src="/play.svg" alt="Start icon" />
-                </button>
-                <button className="pauseTimer" onClick={() => setIsRunning(false)} disabled={!isRunning}>
-                    <img src="/pause.svg" alt="Pause icon" />
-                </button>
-                <button className="resetTimer" onClick={() => { setTime(0), setIsRunning(false) }}>
-                    <img src="/reset.svg" alt="Reset icon" />
-                </button>
+                <ButtonGroup className="flex flex-row justify-center gap-0">
+                    <Button variant="outline" className="startTimer" size="icon-lg" onClick={() => setIsRunning(true)} disabled={isRunning}>
+                        <img src="/play.svg" alt="Start icon" />
+                    </Button>
+                    <Button variant="outline" className="pauseTimer" size="icon-lg" onClick={() => setIsRunning(false)} disabled={!isRunning}>
+                        <img src="/pause.svg" alt="Pause icon" />
+                    </Button>
+                    <Button variant="outline" className="resetTimer" size="icon-lg" onClick={() => { setTime(0), setIsRunning(false) }}>
+                        <img src="/reset.svg" alt="Reset icon" />
+                    </Button>
+                </ButtonGroup>
             </div>
-            <button onClick={handleNextButton}>Next</button>
+            <Button className="taskTimerNextBtn" onClick={handleNextButton}>Next</Button>
         </section>
     )
 }

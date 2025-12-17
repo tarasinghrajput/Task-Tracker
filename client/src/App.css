@@ -5,6 +5,10 @@
   text-align: center;
 }
 
+body {
+  background-color: oklch(98.5% .002 247.839);
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -41,37 +45,38 @@
   color: #888;
 }
 
-.timerControls {
-  margin-top: 80px;
+.taskTimer {
+  height: auto;
+  width: auto;
+  margin: 25vh;
 }
 
-.timerControls button {
-  padding: 0;
-  background-color: transparent;
-  margin-right: 20px;
-}
-
-.timerControls button:hover {
-  border: none;
-  background-color: transparent;
+.timeHeading h2 {
+  font-size: 72px;
 }
 
 .timerControls img {
   color: black;
   height: 30px;
-  padding: 0;
+  padding: 6px;
+}
+.timerControls {
+  margin: 40px 0px;
+  display: flex;
+  justify-content: center;
 }
 
+.taskTimerNextBtn {
+  cursor: pointer;
+}
 .taskFormSection {
-  background-color: #e4e4e4;
   padding: 30px;
   border-radius: 8px;
+  background-color: white;
+  border: 1px solid #e8e8e8;
 }
-
-.taskFormSection h2 {
-  margin: 0px 0px 20px 0px;
-}
-
+  
+/*
 .tf-form  form{
   display: flex;
   flex-direction: column;
@@ -81,7 +86,7 @@
 
 section > button {
   margin-top: 20px;
-}
+} */
 
 /* Login Form Starting */
 .loginFormSection {
