@@ -5,7 +5,7 @@ import './App.css'
 import TaskTimer from './components/TaskTimer'
 import TaskForm from './components/TaskForm'
 import TaskDashboard from './components/TaskDashbord'
-import LoginForm from './components/LoginForm'
+import LoginPage from './components/LoginPage'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 
@@ -17,7 +17,7 @@ function App() {
       {/* Routes */}
       <Routes>
         <Route path="/" element={<TaskDashboard />} />
-        <Route path="/login" element={<LoginForm/>}/>
+        <Route path="/login" element={<LoginPage />}/>
         <Route path="/taskForm" element={<TaskForm />} />
         <Route path="/taskTimer" element={<TaskTimer />} />
       </Routes>

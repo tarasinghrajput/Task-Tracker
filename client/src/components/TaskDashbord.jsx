@@ -39,7 +39,7 @@ function TaskDashboard() {
                     </Button>
                 </div>
                 <div className="taskDashboardList">
-                    {!tasks ?
+                    {tasks.length > 0 ?
                         <Table>
                             <TableCaption>A list of your tasks.</TableCaption>
                             <TableHeader>
@@ -50,13 +50,13 @@ function TaskDashboard() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                tasks.map((task) => {
+                                {tasks.map((task) => {
                                     <TableRow key={task.id}>
                                         <TableCell className="font-medium">{task.taskDate}</TableCell>
                                         <TableCell>{task.taskTitle}</TableCell>
                                         <TableCell className="text-right">{task.taskTimeElapsed}</TableCell>
                                     </TableRow>
-                                })
+                                })}
                             </TableBody>
                         </Table>
 

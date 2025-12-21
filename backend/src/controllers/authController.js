@@ -2,11 +2,12 @@ const bcrypt = require('bcryptjs')
 const saltRounds = 12
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const secret = process.env.JWT_SECRET
 // const { validationResult } = require('express-validator')
+const transporter = require('../config/nodemailer')
 
 const register = async (req, res) => {
     const { formEmail, formPassword } = req.body
-    const secret = process.env.JWT_SECRET
 
     if (!formEmail || !formPassword) {
         return res.status(401).json({ success: false, message: "Email and Password are required" })
@@ -32,6 +33,15 @@ const register = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
+        // Sending Welcome Email
+        const mailOptions = {
+            from: process.env.SMTP_FROM,
+            to: formEmail,
+            subject: "Welcome to Task Tracker for AP",
+            text: `Welcome to the Task Tracker made only for Apnipathshala. Your registered email: ${formEmail} `
+        }
+        await transporter.sendMail(mailOptions)
+
         return res.status(200).json({ success: true, message: "Registered Successful" })
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
@@ -50,12 +60,12 @@ const login = async (req, res) => {
             return res.status(402).json({ success: false, message: "Email is not registered" })
         }
         
-        const isMatching = await bcrypt.compare(formPassword, user.password)
+        const isMatching = await bcrypt.compare(formPassword, user.passwordHash)
         
         if(!isMatching) {
             return res.status(403).json({ success: false, message: "Password is incorrect" })
         }
-
+        
         const token = jwt.sign({ id: user._id }, secret, { expiresIn: '7d' })
 
         res.cookie('token', token, {
@@ -64,6 +74,16 @@ const login = async (req, res) => {
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
+
+        // Sending Welcome Email
+        const mailOptions = {
+            from: process.env.SMTP_FROM,
+            to: formEmail,
+            subject: "Welcome back to Task Tracker for AP",
+            text: `Welcome to the Task Tracker made only for Apnipathshala. Your registered email: ${formEmail} `
+        }
+
+        await transporter.sendMail(mailOptions)
 
         return res.status(200).json({ success: true, message: "Login Successful" })
         

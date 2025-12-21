@@ -7,6 +7,7 @@ import {
     ButtonGroupText,
 } from "@/components/ui/button-group"
 import { Button } from "@/components/ui/button"
+import fetchAPI from '../api.js'
 
 function TaskForm() {
     const location = useLocation()
@@ -29,7 +30,8 @@ function TaskForm() {
             taskStatus: formData.get('tf-taskStatus')
         }
 
-        tasks.push(newTask)
+        console.log(newTask)
+        const data = await fetchAPI(`/task/get:${newTask.id}`)
 
     }
 

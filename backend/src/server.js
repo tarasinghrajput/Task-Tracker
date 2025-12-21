@@ -1,9 +1,10 @@
 const express = require('express')
 const cors = require('cors')
-const connectDB = require('./db')
+const connectDB = require('./config/db.js')
 require('dotenv').config()
 const session = require('express-session')
 const { authRouter } = require('./routes/authRoutes.js')
+const { taskRouter } = require('./routes/taskRoutes.js')
 
 const app = express()
 app.use(express.json())
@@ -19,6 +20,7 @@ app.get('/api/health', (req, res) => {
 })
 
 app.use('/api/auth', authRouter)
+app.use('/api/task', taskRouter)
 
 app.listen(PORT, () => {
     console.log(`Server is listening on PORT = ${PORT}`)
