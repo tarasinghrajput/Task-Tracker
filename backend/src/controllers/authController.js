@@ -171,11 +171,83 @@ const isAuthenticated = async (req, res) => {
     }
 }
 
+const sendPasswordResetOtp = async (req, res) => {
+    const { formEmail } = req.body
+    
+    if(!formEmail) {
+        return res.status(400).json({ success: false, message: "Email not provided" })
+    }
+    
+    try {
+        const user = await User.findOne({email: formEmail})
+        if(!user) {
+            return res.status(401).json({ success: false, message: "User not found" })
+        }
+
+        const otp = String(Math.floor(100000 + Math.random() * 900000))
+
+        user.resetOtp = otp
+        user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000
+
+        await user.save()
+
+        const mailOptions = {
+            from: process.env.SMTP_FROM,
+            to: user.email,
+            subject: "Password reset OTP",
+            text: `Your otp to reset the forgotten password is ${otp}`
+        }
+        await transporter.sendMail(mailOptions)
+        return res.status(200).json({ success: true, message: "Password Reset OTP is sent to user" })
+
+    } catch(error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const resetPassword = async (req, res) => {
+    const { formEmail, newPassword, otp } = req.body
+    
+    if(!formEmail || !newPassword || !otp) {
+        return res.status(400).json({ success: false, message: "Please provide all the details" })
+    }
+    
+    try {
+        
+        const user = await User.findOne({ email: formEmail })
+        if(!user) {
+            return res.status(400).json({ success: false, message: "User not found" })
+        }
+
+        if(user.resetOtp === '' || user.resetOtp !== otp) {
+            return res.status(401).json({ success: false, message: "Invalid OTP" })
+        }
+        
+        if(user.resetOtpExpireAt < Date.now()) {
+            return res.status(402).json({ success: false, message: "OTP Expired" })
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
+
+        user.passwordHash = hashedPassword
+        user.resetOtp =''
+        user.resetOtpExpireAt = 0
+
+        await user.save()
+        return res.status(200).json({ success: false, message: "Password reset successful" })
+
+    } catch(error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     register,
     login,
     logout,
     sendVerifyOtp,
     verifyOtp,
-    isAuthenticated
+    isAuthenticated,
+    sendPasswordResetOtp,
+    resetPassword
 }
