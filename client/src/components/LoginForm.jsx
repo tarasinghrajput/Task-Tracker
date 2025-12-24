@@ -44,13 +44,11 @@ function LoginForm({ className, ...props }) {
             toast.error(`Login unsuccessful`)
         } else {
             try {
-                const data = await fetchAPI('/login', {
+                const data = await fetchAPI('/auth/login', {
                     method: 'POST',
                     body: JSON.stringify({ formEmail, formPassword }),
                     credentials: 'include'
                 })
-                toast('Login Successfull')
-                // setSuccessMessage(data)
             } catch (error) {
                 throw new Error('Fetching the API failed', error)
             }
@@ -59,23 +57,6 @@ function LoginForm({ className, ...props }) {
 
 
     return (
-        // <section className="loginFormSection">
-        //     <div className="loginFormDiv">
-        //         <form onSubmit={handleSignIn} id="login-form">
-        //             <label htmlFor="email">
-        //                 Email <br />
-        //                 <input type="email" name="email" id="email" />
-        //             </label>
-        //             <label htmlFor="password">
-        //                 Password <br />
-        //                 <input type="password" name="password" id="password" />
-        //             </label>
-        //             <button>Sign in</button>
-        //             {successMessage && <p style={{ color: 'white' }}>{successMessage.message}</p>}
-        //             <ToastContainer />
-        //         </form>
-        //     </div>
-        // </section>
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card className="overflow-hidden p-0">
                 <CardContent className="grid p-0 md:grid-cols-2">
@@ -84,7 +65,7 @@ function LoginForm({ className, ...props }) {
                             <div className="flex flex-col items-center gap-2 text-center">
                                 <h1 className="text-2xl font-bold">Welcome back</h1>
                                 <p className="text-muted-foreground text-balance">
-                                    Login to your Acme Inc account
+                                    Login to your Apnipathshala's Task Tracker account
                                 </p>
                             </div>
                             <Field>
