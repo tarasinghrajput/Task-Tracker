@@ -2,27 +2,20 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import TaskTimer from './components/TaskTimer'
-import TaskForm from './components/TaskForm'
-import TaskDashboard from './components/TaskDashbord'
-import LoginPage from './components/LoginPage'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import AppRoutes from './routes/AppRoutes'
+// import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useAuth } from './auth/AuthContext'
+import { Spinner } from "@/components/ui/spinner"
 
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { loading } = useAuth()
 
-  return (
-    <BrowserRouter>
-      {/* Routes */}
-      <Routes>
-        <Route path="/" element={<TaskDashboard />} />
-        <Route path="/login" element={<LoginPage />}/>
-        <Route path="/taskForm" element={<TaskForm />} />
-        <Route path="/taskTimer" element={<TaskTimer />} />
-      </Routes>
-    </BrowserRouter>
-  )
+  if(loading) {
+    return <Spinner/>
+  }
+
+  return <AppRoutes />
 }
 
 export default App

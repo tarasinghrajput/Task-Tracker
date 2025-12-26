@@ -1,23 +1,27 @@
 const backendURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 const apiURL = `${backendURL}/api`
 
-export default async function fetchAPI(endpoint, options){
+export default async function fetchAPI(endpoint, options = {}) {
 
-    const headers = { 
-        "Content-Type": "application/json" ,
-        "Access-Control-Allow-Credentials": true
-    }
     try {
         const response = await fetch(`${apiURL}${endpoint}`, {
             ...options,
-            headers: headers,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            },
+            credentials: 'include',
         })
-        if(!response.ok) {
-            return console.error("Response is not ok")
-        }
+
         const data = await response.json()
+
+        if (!response.ok) {
+            throw new Error(data.message || 'API request failed')
+        }
+
         return data
-    } catch(error) {
-        throw new Error(`Fetching the API failed....: ${error}`)
+    } catch (error) {
+        console.error('API Error: ', error)
+        throw error
     }
 }

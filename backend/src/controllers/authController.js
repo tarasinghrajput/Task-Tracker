@@ -10,12 +10,12 @@ const register = async (req, res) => {
     const { formEmail, formPassword } = req.body
 
     if (!formEmail || !formPassword) {
-        return res.status(401).json({ success: false, message: "Email and Password are required" })
+        return res.status(400).json({ success: false, message: "Email and Password are required" })
     }
     try {
         const existingUser = await User.findOne({ email: formEmail })
         if (existingUser) {
-            return res.status(402).json({ success: false, message: "Email is registered" })
+            return res.status(409).json({ success: false, message: "Email is registered" })
         }
         const hashedPassword = await bcrypt.hash(formPassword, saltRounds)
         const date = new Date()
@@ -71,7 +71,7 @@ const login = async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 

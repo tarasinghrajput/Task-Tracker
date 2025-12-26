@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 
-function LoginForm({ className, ...props }) {
+function SignupForm({ className, ...props }) {
     const { setAuthenticated } = useAuth()
     const navigate = useNavigate()
     const [email, setEmail] = useState('')
@@ -35,9 +35,9 @@ function LoginForm({ className, ...props }) {
         return Object.keys(tempErrors).length === 0
     }
 
-    const handleLogIn = async (event) => {
+    const handleSignup = async (event) => {
         event.preventDefault()
-        const form = document.getElementById('login-form')
+        const form = document.getElementById('signup-form')
         const formData = new FormData(form)
         const formEmail = formData.get("email")
         const formPassword = formData.get("password")
@@ -46,22 +46,25 @@ function LoginForm({ className, ...props }) {
 
         if (!validate(formEmail, formPassword)) {
             toast.error(`Login unsuccessful`)
-        } else {
-            try {
-                const data = await fetchAPI('/auth/login', {
-                    method: 'POST',
-                    body: JSON.stringify({ formEmail, formPassword }),
-                    credentials: 'include'
-                })
-
-                if(data.success) {
-                    setAuthenticated(true)
-                    navigate('/')
-                }
-            } catch (error) {
-                throw new Error(`Fetching the API failed: ${error}`)
-            }
+            return
         }
+
+        try {
+            const data = await fetchAPI('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({ formEmail, formPassword }),
+            })
+
+            if (data.success) {
+                setAuthenticated(true)
+                navigate('/')
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+
     }
 
 
@@ -69,12 +72,12 @@ function LoginForm({ className, ...props }) {
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card className="overflow-hidden p-0">
                 <CardContent className="grid p-0 md:grid-cols-2">
-                    <form className="p-6 md:p-8" id="login-form" onSubmit={handleLogIn}>
+                    <form className="p-6 md:p-8" id="signup-form" onSubmit={handleSignup}>
                         <FieldGroup>
                             <div className="flex flex-col items-center gap-2 text-center">
-                                <h1 className="text-2xl font-bold">Welcome back</h1>
+                                <h1 className="text-2xl font-bold">Welcome!</h1>
                                 <p className="text-muted-foreground text-balance">
-                                    Login to your Apnipathshala's Task Tracker account
+                                    Signup to Apnipathshala's Task Tracker account
                                 </p>
                             </div>
                             <Field>
@@ -85,16 +88,15 @@ function LoginForm({ className, ...props }) {
                             <Field>
                                 <div className="flex items-center">
                                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                                    <a href="#" className="ml-auto text-sm underline-offset-2 hover:underline">Forgot your password?</a>
                                 </div>
                                 <Input id="password" name="password" type="password" required />
                             </Field>
                             {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
                             <Field>
-                                <Button type="submit" className="cursor-pointer">Login</Button>
+                                <Button type="submit" className="cursor-pointer">Sign up</Button>
                             </Field>
                             <FieldDescription className="text-center">
-                                Don&apos;t have an account? <a href="/signup">Sign up</a>
+                                Already have an account? <a href="/login">Login</a>
                             </FieldDescription>
                         </FieldGroup>
                     </form>
@@ -116,4 +118,4 @@ function LoginForm({ className, ...props }) {
     )
 }
 
-export default LoginForm
+export default SignupForm
