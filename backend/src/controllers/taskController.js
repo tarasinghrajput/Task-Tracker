@@ -16,12 +16,20 @@ const addTask = async (req, res) => {
         return res.status(401).json({ success: false, message: "Tasks data is not complete" })
     }
 
+    const [year, month, day] = (taskDate || '').split('-').map(Number)
+
+    if ([year, month, day].some((value) => Number.isNaN(value))) {
+        return res.status(400).json({ success: false, message: "Invalid task date provided" })
+    }
+
+    const normalizedTaskDate = new Date(Date.UTC(year, month - 1, day))
+
     try {
 
         const task = new Task(
             {
                 taskTimeElapsed,
-                taskDate,
+                taskDate: normalizedTaskDate,
                 taskCategory,
                 taskType,
                 taskTitle,

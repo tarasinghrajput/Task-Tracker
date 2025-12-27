@@ -13,7 +13,6 @@ import fetchAPI from '../api.js'
 function TaskForm() {
     const location = useLocation()
     const receivedState = location.state
-    const tasks = JSON.parse(localStorage.getItem('task')) || []
 
     const handleTaskFormData = async (event) => {
         event.preventDefault()

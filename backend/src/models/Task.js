@@ -3,7 +3,7 @@ const { mongoose } = require('mongoose')
 const taskSchema = mongoose.Schema(
     {
         taskTimeElapsed: { type: String, required: true, },
-            taskDate: { type: Date, required: true, },
+        taskDate: { type: Date, required: true, },
         taskCategory: { type: String, required: true, },
         taskType: { type: String, required: true, },
         taskTitle: { type: String, required: true },
