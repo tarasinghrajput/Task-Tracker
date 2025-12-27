@@ -60,7 +60,24 @@ const getAllTask = async (req, res) => {
 
 }
 
+const deleteTask = async (req, res) => { 
+    const { id } = req.body
+
+    if(!id) {
+        return res.status(401).json({ success: false, message: "id is mandatory" })
+    }
+    try {
+        await Task.findByIdAndDelete(id)
+
+        return res.status(200).json({ success: true, message: "Task deleted successfully" })
+
+    } catch(error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     addTask,
-    getAllTask
+    getAllTask,
+    deleteTask
 } 

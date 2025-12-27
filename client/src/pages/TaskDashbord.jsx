@@ -53,6 +53,21 @@ function TaskDashboard() {
         })
     }
 
+    const handleDeleteTask = async (task) => {
+        toast.promise(
+            fetchAPI('/task/delete-task', {
+                method: 'POST',
+                body: JSON.stringify({id: task._id})
+            }),
+            {
+                loading: "The task is being deleted......",
+                success: (data) => data.message || "The task deleted successfully",
+                error: (error) => error.message || "The tasks deletion failed an error"
+            }
+        )
+        getAllTaskWithToast()
+    }
+
     return (
 
         <div className="flex flex-col items-center justify-center">
@@ -73,15 +88,19 @@ function TaskDashboard() {
                                     <TableHead className="w-[100px]">Date</TableHead>
                                     <TableHead>Task Title</TableHead>
                                     <TableHead className="text-right">Time Elapsed</TableHead>
+                                    {/* <TableHead className="text-right">Actions</TableHead> */}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tasks.map((task) => {
                                     return (
-                                        <TableRow key={task._id}>
+                                        <TableRow key={task._id} className="taskList">
                                             <TableCell className="font-medium">{formatTaskDate(task.taskDate)}</TableCell>
                                             <TableCell>{task.taskTitle}</TableCell>
                                             <TableCell className="text-right">{task.taskTimeElapsed}</TableCell>
+                                            {/* <TableCell className="flex justify-end">
+                                                <img src="trash-solid-full.svg" alt="Trash can to delete the task" className="w-5" onClick={() => handleDeleteTask(task)}/>
+                                            </TableCell> */}
                                         </TableRow>
                                     )
                                 })}
