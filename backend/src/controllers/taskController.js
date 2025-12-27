@@ -1,6 +1,7 @@
+const Task = require('../models/Task.js')
+
 const addTask = async (req, res) => {
     const {
-        id,
         taskTimeElapsed,
         taskDate,
         taskCategory,
@@ -11,24 +12,47 @@ const addTask = async (req, res) => {
         taskStatus
     } = req.body
 
-    if(!id || !taskTimeElapsed || !taskDate || !taskCategory || !taskType || !taskTitle || !taskDescription || !taskPriority || !taskStatus) {
-        return res.status(401).json({ message: "Tasks data is not complete" })
+    if (!taskTimeElapsed || !taskDate || !taskCategory || !taskType || !taskTitle || !taskDescription || !taskPriority || !taskStatus) {
+        return res.status(401).json({ success: false, message: "Tasks data is not complete" })
     }
-    
-    console.log(id, taskTimeElapsed, taskDate, taskCategory, taskType, taskTitle, taskDescription, taskPriority, taskStatus, "Task added successfully")
+
+    try {
+
+        const task = new Task(
+            {
+                taskTimeElapsed,
+                taskDate,
+                taskCategory,
+                taskType,
+                taskTitle,
+                taskDescription,
+                taskPriority,
+                taskStatus
+            }
+        )
+
+        await task.save()
+
+        return res.status(200).json({ success: true, message: "Task added successfully" })
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
 }
 
-const getTask = async (req, res) => {
-    const id = req.params.taskId
+const getAllTask = async (req, res) => {
+
+    try{
+        const allTask = await Task.find()
     
-    if(!id) {
-        return res.status(401).json({ message: "Task id is required" })
+        return res.status(200).json({ success: true, message: "All Tasks Received", tasks: allTask })
+    } catch(error) {
+        return res.status(500).json({ success: false, message: error.message })
     }
 
-    console.log("Task got successfully")
 }
 
 module.exports = {
     addTask,
-    getTask
+    getAllTask
 } 
