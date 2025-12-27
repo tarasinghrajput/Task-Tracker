@@ -1,5 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react'
-import fetchAPI from '../api'
+import fetchAPI from '../api.js'
 
 export const AuthContext = createContext(null)
 
@@ -22,10 +23,8 @@ export const AuthProvider = ({ children }) => {
                 } else {
                     setAuthenticated(false)
                 }
-            } catch(error) {
-
+            } catch {
                 setAuthenticated(false)
-
             } finally {
 
                 setLoading(false)

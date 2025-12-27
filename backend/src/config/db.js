@@ -11,7 +11,7 @@ const connectDB = async () => {
             serverSelectionTimeoutMS: 10000
         })
 
-        console.log('�o Mong DB Connected successfully')
+        console.log('Mongo DB connected successfully')
     } catch(error) {
         console.error("Mongo DB not connected", error.message)
         process.exit(1)

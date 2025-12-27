@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import fetchAPI from '../api'
+import fetchAPI from '../api.js'
 import { toast } from "sonner"
-import { Toaster } from "@/components/ui/sonner"
 import { Link } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import {
@@ -18,26 +17,23 @@ import {
 function TaskDashboard() {
     const [tasks, setTasks] = useState([])
 
-    const getAllTask = async () => {
-        return fetchAPI('/task/get-tasks', { method: 'GET' })
-    }
+    const fetchTasks = () => {
+        const tasksPromise = fetchAPI('/task/get-tasks', { method: 'GET' }).then((data) => {
+            setTasks(Array.isArray(data.tasks) ? data.tasks : [])
+            return data
+        })
 
-    const getAllTaskWithToast = async () => {
-        return toast.promise(
-            getAllTask(),
-            {
-                loading: "fetching the tasks.....",
-                success: (data) => {
-                    setTasks(data.tasks)
-                    return data.message || "Tasks fetched succcessfully"
-                },
-                error: (error) => error?.message || "Tasks fetched unsucccessfully, please try refreshing the page"
-            }
-        )
+        toast.promise(tasksPromise, {
+            loading: "Fetching tasks...",
+            success: (data) => data.message || "Tasks fetched successfully",
+            error: (error) => error?.message || "Fetching tasks failed. Please try refreshing the page.",
+        })
+
+        return tasksPromise
     }
 
     useEffect(() => {
-        getAllTaskWithToast()
+        fetchTasks()
     }, [])
 
     const formatTaskDate = (dateValue) => {
@@ -53,54 +49,80 @@ function TaskDashboard() {
         })
     }
 
-    const handleDeleteTask = async (task) => {
-        toast.promise(
-            fetchAPI('/task/delete-task', {
-                method: 'POST',
-                body: JSON.stringify({id: task._id})
-            }),
-            {
-                loading: "The task is being deleted......",
-                success: (data) => data.message || "The task deleted successfully",
-                error: (error) => error.message || "The tasks deletion failed an error"
-            }
-        )
-        getAllTaskWithToast()
+    const handleDeleteTask = (taskId) => {
+        const deletePromise = fetchAPI(`/task/${taskId}`, {
+            method: 'DELETE',
+        }).then((data) => {
+            setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId))
+            return data
+        })
+
+        toast.promise(deletePromise, {
+            loading: "Deleting task...",
+            success: (data) => data.message || "Task deleted successfully",
+            error: (error) => error?.message || "Failed to delete the task",
+        })
     }
 
     return (
 
         <div className="flex flex-col items-center justify-center">
-            <Toaster />
-            <section className="taskDashboardSection flex flex-col p-10 rounded-sm bg-white border border-[#e8e8e8] w-full h-180">
+            <section className="taskDashboardSection flex flex-col p-10 rounded-sm bg-white border border-[#e8e8e8] w-full gap-6">
                 <div className="flex w-full flex-row justify-between border-b-2 pb-2 mb-8">
                     <h2 className="text-heading gray-800 text-3xl font-semibold mb-4">Task List</h2>
-                    <Button asChild>
-                        <Link to="/taskTimer">+ Add Task</Link>
-                    </Button>
+                    <div className="flex gap-3">
+                        <Button variant="outline" onClick={fetchTasks}>
+                            Refresh
+                        </Button>
+                        <Button asChild>
+                            <Link to="/taskTimer">+ Add Task</Link>
+                        </Button>
+                    </div>
                 </div>
-                <div className="taskDashboardList">
+                <div className="taskDashboardList overflow-x-auto">
                     {tasks.length > 0 ?
                         <Table>
                             <TableCaption>A list of your tasks.</TableCaption>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[100px]">Date</TableHead>
+                                    <TableHead className="w-[140px]">Task ID</TableHead>
+                                    <TableHead>Date</TableHead>
                                     <TableHead>Task Title</TableHead>
-                                    <TableHead className="text-right">Time Elapsed</TableHead>
-                                    {/* <TableHead className="text-right">Actions</TableHead> */}
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Impact Level</TableHead>
+                                    <TableHead className="text-right">Time Spent</TableHead>
+                                    <TableHead className="text-right">Synced</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tasks.map((task) => {
                                     return (
                                         <TableRow key={task._id} className="taskList">
-                                            <TableCell className="font-medium">{formatTaskDate(task.taskDate)}</TableCell>
+                                            <TableCell className="font-semibold">{task.taskIdentifier}</TableCell>
+                                            <TableCell>{formatTaskDate(task.taskDate)}</TableCell>
                                             <TableCell>{task.taskTitle}</TableCell>
+                                            <TableCell>{task.taskCategory}</TableCell>
+                                            <TableCell>{task.taskStatus}</TableCell>
+                                            <TableCell className="capitalize">{task.impactLevel}</TableCell>
                                             <TableCell className="text-right">{task.taskTimeElapsed}</TableCell>
-                                            {/* <TableCell className="flex justify-end">
-                                                <img src="trash-solid-full.svg" alt="Trash can to delete the task" className="w-5" onClick={() => handleDeleteTask(task)}/>
-                                            </TableCell> */}
+                                            <TableCell className="text-right">
+                                                <span className={task.isSyncedToSheet ? "text-green-600 text-sm font-medium" : "text-amber-600 text-sm font-medium"}>
+                                                    {task.isSyncedToSheet ? 'Synced' : 'Pending'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="flex justify-end">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    type="button"
+                                                    aria-label="Delete task"
+                                                    onClick={() => handleDeleteTask(task._id)}
+                                                >
+                                                    <img src="/trash-solid-full.svg" alt="Delete task" className="w-4 h-4" />
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     )
                                 })}

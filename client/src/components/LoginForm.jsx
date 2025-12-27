@@ -11,7 +11,6 @@ import {
     FieldDescription,
     FieldGroup,
     FieldLabel,
-    FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
@@ -19,10 +18,7 @@ import { toast } from "sonner"
 function LoginForm({ className, ...props }) {
     const { setAuthenticated } = useAuth()
     const navigate = useNavigate()
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
     const [errors, setErrors] = useState({})
-    const [successMessage, setSuccessMessage] = useState({})
 
     function validate(formEmail, formPassword) {
         let tempErrors = {}
@@ -37,30 +33,27 @@ function LoginForm({ className, ...props }) {
 
     const handleLogIn = async (event) => {
         event.preventDefault()
-        const form = document.getElementById('login-form')
-        const formData = new FormData(form)
+        const formData = new FormData(event.currentTarget)
         const formEmail = formData.get("email")
         const formPassword = formData.get("password")
-        setEmail(formEmail)
-        setPassword(formPassword)
 
         if (!validate(formEmail, formPassword)) {
             toast.error(`Login unsuccessful`)
-        } else {
-            try {
-                const data = await fetchAPI('/auth/login', {
-                    method: 'POST',
-                    body: JSON.stringify({ formEmail, formPassword }),
-                    credentials: 'include'
-                })
+            return
+        }
 
-                if(data.success) {
-                    setAuthenticated(true)
-                    navigate('/')
-                }
-            } catch (error) {
-                throw new Error(`Fetching the API failed: ${error}`)
+        try {
+            const data = await fetchAPI('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ formEmail, formPassword }),
+            })
+
+            if (data.success) {
+                setAuthenticated(true)
+                navigate('/')
             }
+        } catch (error) {
+            toast.error(error?.message || "Login failed. Please try again.")
         }
     }
 

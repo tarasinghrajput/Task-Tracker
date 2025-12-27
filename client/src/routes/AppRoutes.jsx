@@ -6,6 +6,8 @@ import LoginPage from '../pages/LoginPage'
 import NotFound from '../pages/NotFound'
 import SignupPage from '../pages/SignupPage'
 import ProtectedRoute from './ProtectedRoute'
+import AppLayout from '../components/AppLayout.jsx'
+import SettingsPage from '../pages/SettingsPage.jsx'
 
 const AppRoutes = () => {
     return (
@@ -17,9 +19,12 @@ const AppRoutes = () => {
 
             {/* Protected Pages */}
             <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<TaskDashboard />} />
-                <Route path="/taskForm" element={<TaskForm />} />
-                <Route path="/taskTimer" element={<TaskTimer />} />
+                <Route element={<AppLayout />}>
+                    <Route path="/" element={<TaskDashboard />} />
+                    <Route path="/taskForm" element={<TaskForm />} />
+                    <Route path="/taskTimer" element={<TaskTimer />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                </Route>
             </Route>
 
             {/* Fallback Page */}

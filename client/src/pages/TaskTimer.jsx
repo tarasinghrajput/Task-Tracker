@@ -2,11 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import '../App.css'
 import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
-import {
-    ButtonGroup,
-    ButtonGroupSeparator,
-    ButtonGroupText,
-} from "@/components/ui/button-group"
+import { ButtonGroup } from "@/components/ui/button-group"
 
 
 function TimerDisplay() {
@@ -56,7 +52,10 @@ function TimerDisplay() {
                     <Button variant="outline" className="pauseTimer" size="icon-lg" onClick={() => setIsRunning(false)} disabled={!isRunning}>
                         <img src="/pause.svg" alt="Pause icon" />
                     </Button>
-                    <Button variant="outline" className="resetTimer" size="icon-lg" onClick={() => { setTime(0), setIsRunning(false) }}>
+                    <Button variant="outline" className="resetTimer" size="icon-lg" onClick={() => {
+                        setTime(0)
+                        setIsRunning(false)
+                    }}>
                         <img src="/reset.svg" alt="Reset icon" />
                     </Button>
                 </ButtonGroup>

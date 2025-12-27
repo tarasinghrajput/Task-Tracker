@@ -11,7 +11,6 @@ import {
     FieldDescription,
     FieldGroup,
     FieldLabel,
-    FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
@@ -19,10 +18,7 @@ import { toast } from "sonner"
 function SignupForm({ className, ...props }) {
     const { setAuthenticated } = useAuth()
     const navigate = useNavigate()
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
     const [errors, setErrors] = useState({})
-    const [successMessage, setSuccessMessage] = useState({})
 
     function validate(formEmail, formPassword) {
         let tempErrors = {}
@@ -37,15 +33,12 @@ function SignupForm({ className, ...props }) {
 
     const handleSignup = async (event) => {
         event.preventDefault()
-        const form = document.getElementById('signup-form')
-        const formData = new FormData(form)
+        const formData = new FormData(event.currentTarget)
         const formEmail = formData.get("email")
         const formPassword = formData.get("password")
-        setEmail(formEmail)
-        setPassword(formPassword)
 
         if (!validate(formEmail, formPassword)) {
-            toast.error(`Login unsuccessful`)
+            toast.error(`Signup unsuccessful`)
             return
         }
 
@@ -62,7 +55,7 @@ function SignupForm({ className, ...props }) {
                 toast.error(data.message)
             }
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error?.message || "Signup failed. Please try again.")
         }
 
     }

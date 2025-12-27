@@ -5,6 +5,7 @@ require('dotenv').config()
 const cookieParser = require('cookie-parser')
 const { authRouter } = require('./routes/authRoutes.js')
 const { taskRouter } = require('./routes/taskRoutes.js')
+const { sheetRouter } = require('./routes/sheetRoutes.js')
 
 const app = express()
 app.use(express.json())
@@ -22,6 +23,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRouter)
 app.use('/api/task', taskRouter)
+app.use('/api/sheets', sheetRouter)
 
 app.listen(PORT, () => {
     console.log(`Server is listening on PORT = ${PORT}`)
