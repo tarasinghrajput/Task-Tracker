@@ -10,7 +10,7 @@ const { sheetRouter } = require('./routes/sheetRoutes.js')
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors({ origin: "http://localhost:5173", credentials: true }))
+app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }))
 const PORT = process.env.PORT || 8000
 
 connectDB()
