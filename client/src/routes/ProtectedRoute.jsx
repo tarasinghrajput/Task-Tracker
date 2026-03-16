@@ -8,7 +8,7 @@ const ProtectedRoute = () => {
     if(loading) return <Spinner/>
 
     if(!authenticated) {
-        return <Navigate to="/login" replace />
+        return <Navigate to="/signup" replace />
     }
 
     return <Outlet />
