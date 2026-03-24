@@ -21,11 +21,19 @@ document.addEventListener('DOMContentLoaded', function() {
     updateUI();
 
     document.getElementById("start").addEventListener("click", function() {
-        chrome.runtime.sendMessage({ action: "START_TIMER" });
+        chrome.runtime.sendMessage({ action: "START_TIMER" }, (response) => {
+            if (response && !response.success) {
+                alert(response.error);
+            }
+        });
     });
 
     document.getElementById("pause").addEventListener("click", function() {
-        chrome.runtime.sendMessage({ action: "PAUSE_TIMER" });
+        chrome.runtime.sendMessage({ action: "PAUSE_TIMER" }, (response) => {
+            if (response && !response.success) {
+                alert(response.error);
+            }
+        });
     });
 
     document.getElementById("reset").addEventListener("click", function() {
