@@ -1,5 +1,9 @@
+let timerState = "IDLE"
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "START_TIMER") {
+
+    if (message.action === "START_TIMER" && (timerState === "IDLE" || timerState === "PAUSE" || timerState === "STOP")) {
+        timerState = "START"
         chrome.storage.local.get(["isRunning"], (data) => {
             if (data.isRunning) {
                 sendResponse({ success: false, error: "Timer is already running" });
@@ -10,8 +14,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         return true;
     }
-
-    if (message.action === "PAUSE_TIMER") {
+    
+    if (message.action === "PAUSE_TIMER" && timerState === "START" && timerState !== "STOP") {
+        timerState = "PAUSE"
         chrome.storage.local.get(["isRunning"], (data) => {
             if (!data.isRunning) {
                 sendResponse({ success: false, error: "Timer is not running" });
@@ -22,9 +27,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         return true;
     }
-
-    if (message.action === "RESET_TIMER") {
+    
+    if (message.action === "RESET_TIMER" && (timerState !== "STOP" || timerState !== "PAUSE")) {
+        timerState = "STOP"
         resetTimer();
+        timerState = "IDLE"
         sendResponse({ success: true });
     }
 });
