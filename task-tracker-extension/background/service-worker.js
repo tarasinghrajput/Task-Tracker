@@ -1,6 +1,7 @@
+// chrome.storage.local.set({ "timerState": "IDLE" });
 let timerState = "IDLE"
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
     if (message.action === "START_TIMER" && (timerState === "IDLE" || timerState === "PAUSE" || timerState === "STOP")) {
         timerState = "START"
@@ -31,6 +32,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "RESET_TIMER" && (timerState !== "STOP" || timerState !== "PAUSE")) {
         timerState = "STOP"
         resetTimer();
+        timerState = "IDLE"
+        sendResponse({ success: true });
+    }
+
+    if (message.action === "STOP_TIMER" && (timerState !== "IDLE" || timerState !== "START")) {
+        await stopTimer(message.payload);
         timerState = "IDLE"
         sendResponse({ success: true });
     }
@@ -72,4 +79,32 @@ function resetTimer() {
         elapsed: 0,
         isRunning: false
     });
+}
+
+const stopTimer = async (taskNote) => {
+    chrome.storage.local.get(["elapsed", "isRunning"], (data) => {
+        if(!data.isRunning){
+            console.log("Timer is not running");
+            return;
+        }
+    })
+
+    try{
+        const response = await fetch("http://localhost:8000/api/extension/taskNote", {
+            method: 'POST',
+            headers: {
+                "Content-Type": 'application/json'
+            },
+            body: JSON.stringify({taskNote: taskNote})
+        });
+        
+        const responseData = await response.json();
+        if(responseData.success) {
+            console.log("Task note sent successfully to backend");
+        } else {
+            console.error("Backend error:", responseData.message);
+        }
+    } catch(error) {
+        console.error("Task Tracker Backend API fetch failed", error.message)
+    }
 }

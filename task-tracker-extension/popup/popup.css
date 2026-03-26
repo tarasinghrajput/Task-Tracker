@@ -37,6 +37,11 @@ button {
     color: white;
 }
 
+.stop {
+    background: #4CAF50;
+    color: white;
+}
+
 .pause {
     background: #f39c12;
     color: white;

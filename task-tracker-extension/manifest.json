@@ -13,7 +13,7 @@
     "service_worker": "background/service-worker.js"
   },
 
-  "permissions": ["scripting", "tabs", "storage"],
+  "permissions": ["scripting", "tabs", "storage", "host_permissions"],
 
   "host_permissions": [
     "http://localhost:8000/*",

@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+
+    const taskNoteInputField = document.getElementById("taskNote");
+
     function updateUI() {
         chrome.storage.local.get(["startTime", "elapsed", "isRunning"], (data) => {
             let total = data.elapsed || 0;
@@ -35,8 +38,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
+    
     document.getElementById("reset").addEventListener("click", function() {
         chrome.runtime.sendMessage({ action: "RESET_TIMER" });
+    });
+
+    document.getElementById("stop").addEventListener("click", function() {
+        let taskNote = taskNoteInputField.value;
+
+        chrome.runtime.sendMessage({ action: "STOP_TIMER", payload: taskNote }, (response) => {
+            if (response && !response.success) {
+                alert(response.error);
+            }
+        });
     });
 });
