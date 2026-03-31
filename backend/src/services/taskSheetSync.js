@@ -1,3 +1,4 @@
+const { mongoose } = require('mongoose')
 const Sheets = require('../models/Sheets')
 const Task = require('../models/Task')
 const { sendTasksToAppsScript } = require('./appsScriptClient')
@@ -31,12 +32,19 @@ const formatTaskForSheet = (task) => {
     }
 }
 
-const getDefaultSheetConfig = async () => {
-    return Sheets.findOne({ isDefault: true })
+const getDefaultSheetConfig = async (userId) => {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        return null
+    }
+
+    return Sheets.findOne({
+        userId: new mongoose.Types.ObjectId(userId),
+        isDefault: true,
+    })
 }
 
-const syncTaskWithSheet = async (task) => {
-    const sheetConfig = await getDefaultSheetConfig()
+const syncTaskWithSheet = async (task, userId) => {
+    const sheetConfig = await getDefaultSheetConfig(userId)
     if (!sheetConfig || !sheetConfig.appsScriptUrl) {
         return { synced: false, reason: 'No Apps Script URL configured' }
     }
@@ -54,26 +62,34 @@ const syncTaskWithSheet = async (task) => {
 
         await Task.updateOne(
             { _id: task._id },
-            { $set: { isSyncedToSheet: true, sheetSyncError: '' } }
+            { $set: { isSyncedToSheet: true, sheetSyncError: '' } },
         )
 
         return { synced: true }
     } catch (error) {
         await Task.updateOne(
             { _id: task._id },
-            { $set: { isSyncedToSheet: false, sheetSyncError: error.message } }
+            { $set: { isSyncedToSheet: false, sheetSyncError: error.message } },
         )
         return { synced: false, reason: error.message }
     }
 }
 
-const syncPendingTasksWithSheet = async () => {
-    const sheetConfig = await getDefaultSheetConfig()
+const syncPendingTasksWithSheet = async (userId) => {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        throw new Error('Invalid user ID')
+    }
+
+    const sheetConfig = await getDefaultSheetConfig(userId)
     if (!sheetConfig || !sheetConfig.appsScriptUrl) {
         throw new Error('No Apps Script URL configured')
     }
 
-    const pendingTasks = await Task.find({ isSyncedToSheet: { $ne: true } })
+    const pendingTasks = await Task.find({
+        userId: new mongoose.Types.ObjectId(userId),
+        isSyncedToSheet: { $ne: true },
+    })
+
     if (pendingTasks.length === 0) {
         return { syncedCount: 0, total: 0 }
     }
@@ -93,7 +109,7 @@ const syncPendingTasksWithSheet = async () => {
 
         await Task.updateMany(
             { _id: { $in: pendingTasks.map((task) => task._id) } },
-            { $set: { isSyncedToSheet: true, sheetSyncError: '' } }
+            { $set: { isSyncedToSheet: true, sheetSyncError: '' } },
         )
 
         return { syncedCount: pendingTasks.length, total: pendingTasks.length }

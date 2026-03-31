@@ -24,8 +24,8 @@ const parseTaskDateInput = (value = '') => {
     return new Date(Date.UTC(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth(), parsedDate.getUTCDate()))
 }
 
-const getNextTaskIdentifierValue = async () => {
-    const lastTask = await Task.findOne().sort({ createdAt: -1 }).select('taskIdentifier')
+const getNextTaskIdentifierValue = async (userId) => {
+    const lastTask = await Task.findOne({ userId }).sort({ createdAt: -1 }).select('taskIdentifier')
     if (!lastTask || !TASK_IDENTIFIER_REGEX.test(lastTask.taskIdentifier || '')) {
         return `${TASK_IDENTIFIER_PREFIX}001`
     }
@@ -36,6 +36,7 @@ const getNextTaskIdentifierValue = async () => {
 }
 
 const addTask = async (req, res) => {
+    const userId = req.user.id
     const {
         taskIdentifier,
         taskTimeElapsed,
@@ -67,23 +68,23 @@ const addTask = async (req, res) => {
         !issueSource ||
         !toolsInvolved
     ) {
-        return res.status(401).json({ success: false, message: "Tasks data is not complete" })
+        return res.status(400).json({ success: false, message: 'Tasks data is not complete' })
     }
 
     const numericTaskPriority = Number(taskPriority)
 
     if (Number.isNaN(numericTaskPriority) || numericTaskPriority < 0 || numericTaskPriority > 3) {
-        return res.status(400).json({ success: false, message: "Invalid priority value" })
+        return res.status(400).json({ success: false, message: 'Invalid priority value' })
     }
 
     const normalizedTaskDate = parseTaskDateInput(taskDate)
     if (!normalizedTaskDate) {
-        return res.status(400).json({ success: false, message: "Invalid task date provided" })
+        return res.status(400).json({ success: false, message: 'Invalid task date provided' })
     }
 
     const normalizedImpactLevel = impactLevel.toLowerCase()
     if (!IMPACT_LEVELS.includes(normalizedImpactLevel)) {
-        return res.status(400).json({ success: false, message: "Invalid impact level provided" })
+        return res.status(400).json({ success: false, message: 'Invalid impact level provided' })
     }
 
     const providedIdentifier = taskIdentifier?.trim().toUpperCase()
@@ -91,47 +92,45 @@ const addTask = async (req, res) => {
 
     if (providedIdentifier) {
         if (!TASK_IDENTIFIER_REGEX.test(providedIdentifier)) {
-            return res.status(400).json({ success: false, message: "Task ID must follow TASK-001 format" })
+            return res.status(400).json({ success: false, message: 'Task ID must follow TASK-001 format' })
         }
 
-        const existingTask = await Task.findOne({ taskIdentifier: providedIdentifier })
+        const existingTask = await Task.findOne({ taskIdentifier: providedIdentifier, userId })
         if (existingTask) {
-            return res.status(409).json({ success: false, message: "Provided Task ID already exists" })
+            return res.status(409).json({ success: false, message: 'Provided Task ID already exists' })
         }
     } else {
-        identifierToUse = await getNextTaskIdentifierValue()
+        identifierToUse = await getNextTaskIdentifierValue(userId)
     }
 
     try {
-
-        const task = new Task(
-            {
-                taskIdentifier: identifierToUse,
-                taskTimeElapsed,
-                taskDate: normalizedTaskDate,
-                taskCategory,
-                taskType,
-                taskTitle,
-                taskDescription,
-                taskPriority: numericTaskPriority,
-                taskStatus,
-                impactArea,
-                impactLevel: normalizedImpactLevel,
-                issueSource,
-                toolsInvolved,
-            }
-        )
+        const task = new Task({
+            userId,
+            taskIdentifier: identifierToUse,
+            taskTimeElapsed,
+            taskDate: normalizedTaskDate,
+            taskCategory,
+            taskType,
+            taskTitle,
+            taskDescription,
+            taskPriority: numericTaskPriority,
+            taskStatus,
+            impactArea,
+            impactLevel: normalizedImpactLevel,
+            issueSource,
+            toolsInvolved,
+        })
 
         await task.save()
 
-        const syncResult = await syncTaskWithSheet(task)
+        const syncResult = await syncTaskWithSheet(task, userId)
         task.isSyncedToSheet = !!syncResult.synced
         task.sheetSyncError = syncResult.reason && !syncResult.synced ? syncResult.reason : ''
         const responseMessage = syncResult.synced
-            ? "Task added and synced successfully"
+            ? 'Task added and synced successfully'
             : syncResult.reason
                 ? `Task added but not synced: ${syncResult.reason}`
-                : "Task added successfully"
+                : 'Task added successfully'
 
         return res.status(200).json({
             success: true,
@@ -139,48 +138,49 @@ const addTask = async (req, res) => {
             task,
             syncedToSheet: syncResult.synced,
         })
-
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
     }
 }
 
 const getAllTask = async (req, res) => {
+    const userId = req.user.id
 
-    try{
-        const allTask = await Task.find()
-    
-        return res.status(200).json({ success: true, message: "All Tasks Received", tasks: allTask })
-    } catch(error) {
+    try {
+        const allTask = await Task.find({ userId })
+        return res.status(200).json({ success: true, message: 'All Tasks Received', tasks: allTask })
+    } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
     }
+}
 
+const getTaskById = async (req, res) => {
+    try {
+        return res.status(200).json({ success: true, task: req.task })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
 }
 
 const deleteTask = async (req, res) => {
     const { id } = req.params
 
     if (!id) {
-        return res.status(400).json({ success: false, message: "Task id is required" })
+        return res.status(400).json({ success: false, message: 'Task id is required' })
     }
 
     try {
-        const deletedTask = await Task.findByIdAndDelete(id)
-
-        if (!deletedTask) {
-            return res.status(404).json({ success: false, message: "Task not found" })
-        }
-
-        return res.status(200).json({ success: true, message: "Task deleted successfully" })
-
+        await Task.deleteOne({ _id: req.task._id })
+        return res.status(200).json({ success: true, message: 'Task deleted successfully' })
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
     }
 }
 
 const getNextTaskIdentifier = async (req, res) => {
+    const userId = req.user.id
     try {
-        const nextId = await getNextTaskIdentifierValue()
+        const nextId = await getNextTaskIdentifierValue(userId)
         return res.status(200).json({ success: true, nextId })
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
@@ -190,6 +190,7 @@ const getNextTaskIdentifier = async (req, res) => {
 module.exports = {
     addTask,
     getAllTask,
+    getTaskById,
     deleteTask,
     getNextTaskIdentifier,
 }

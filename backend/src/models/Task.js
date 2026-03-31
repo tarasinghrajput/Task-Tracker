@@ -2,7 +2,8 @@ const { mongoose } = require('mongoose')
 
 const taskSchema = mongoose.Schema(
     {
-        taskIdentifier: { type: String, required: true, unique: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        taskIdentifier: { type: String, required: true },
         taskTimeElapsed: { type: String, required: true, },
         taskDate: { type: Date, required: true, },
         taskCategory: { type: String, required: true, },
@@ -20,5 +21,7 @@ const taskSchema = mongoose.Schema(
     },
     { timestamps: true }
 )
+
+taskSchema.index({ userId: 1, taskIdentifier: 1 }, { unique: true })
 
 module.exports = mongoose.model("Task", taskSchema)
