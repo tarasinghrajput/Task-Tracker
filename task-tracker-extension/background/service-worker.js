@@ -1,110 +1,126 @@
-// chrome.storage.local.set({ "timerState": "IDLE" });
-let timerState = "IDLE"
+let timerState = 'IDLE'
 
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    const handleMessage = async () => {
+        if (message.action === 'START_TIMER' && ['IDLE', 'PAUSE', 'STOP'].includes(timerState)) {
+            timerState = 'START'
+            chrome.storage.local.get(['isRunning'], (data) => {
+                if (data.isRunning) {
+                    sendResponse({ success: false, error: 'Timer is already running' })
+                } else {
+                    startTimer()
+                    sendResponse({ success: true })
+                }
+            })
+            return
+        }
 
-    if (message.action === "START_TIMER" && (timerState === "IDLE" || timerState === "PAUSE" || timerState === "STOP")) {
-        timerState = "START"
-        chrome.storage.local.get(["isRunning"], (data) => {
-            if (data.isRunning) {
-                sendResponse({ success: false, error: "Timer is already running" });
-            } else {
-                startTimer();
-                sendResponse({ success: true });
+        if (message.action === 'PAUSE_TIMER' && timerState === 'START') {
+            timerState = 'PAUSE'
+            chrome.storage.local.get(['isRunning'], (data) => {
+                if (!data.isRunning) {
+                    sendResponse({ success: false, error: 'Timer is not running' })
+                } else {
+                    pauseTimer()
+                    sendResponse({ success: true })
+                }
+            })
+            return
+        }
+
+        if (message.action === 'RESET_TIMER') {
+            timerState = 'STOP'
+            resetTimer()
+            timerState = 'IDLE'
+            sendResponse({ success: true })
+            return
+        }
+
+        if (message.action === 'STOP_TIMER') {
+            try {
+                await stopTimer(message.payload)
+                timerState = 'IDLE'
+                sendResponse({ success: true })
+            } catch (error) {
+                sendResponse({ success: false, error: error.message || 'Failed to sync task note' })
             }
-        });
-        return true;
-    }
-    
-    if (message.action === "PAUSE_TIMER" && timerState === "START" && timerState !== "STOP") {
-        timerState = "PAUSE"
-        chrome.storage.local.get(["isRunning"], (data) => {
-            if (!data.isRunning) {
-                sendResponse({ success: false, error: "Timer is not running" });
-            } else {
-                pauseTimer();
-                sendResponse({ success: true });
-            }
-        });
-        return true;
-    }
-    
-    if (message.action === "RESET_TIMER" && (timerState !== "STOP" || timerState !== "PAUSE")) {
-        timerState = "STOP"
-        resetTimer();
-        timerState = "IDLE"
-        sendResponse({ success: true });
+            return
+        }
+
+        sendResponse({ success: false, error: 'Unsupported action' })
     }
 
-    if (message.action === "STOP_TIMER" && (timerState !== "IDLE" || timerState !== "START")) {
-        await stopTimer(message.payload);
-        timerState = "IDLE"
-        sendResponse({ success: true });
-    }
-});
-
+    handleMessage()
+    return true
+})
 
 function startTimer() {
-    chrome.storage.local.get(["elapsed", "isRunning"], (data) => {
+    chrome.storage.local.get(['elapsed', 'isRunning'], (data) => {
         if (data.isRunning) {
-            console.log("Timer is already running");
-            return;
+            console.log('Timer is already running')
+            return
         }
         chrome.storage.local.set({
             startTime: Date.now(),
             elapsed: data.elapsed || 0,
-            isRunning: true
-        });
-    });
+            isRunning: true,
+        })
+    })
 }
 
 function pauseTimer() {
-    chrome.storage.local.get(["startTime", "elapsed", "isRunning"], (data) => {
+    chrome.storage.local.get(['startTime', 'elapsed', 'isRunning'], (data) => {
         if (!data.isRunning) {
-            console.log("Timer is not running");
-            return;
+            console.log('Timer is not running')
+            return
         }
-        const elapsed = (data.elapsed || 0) + (Date.now() - data.startTime);
-        
+        const elapsed = (data.elapsed || 0) + (Date.now() - data.startTime)
+
         chrome.storage.local.set({
-            elapsed: elapsed,
-            isRunning: false
-        });
-    });
+            elapsed,
+            isRunning: false,
+        })
+    })
 }
 
 function resetTimer() {
     chrome.storage.local.set({
         startTime: null,
         elapsed: 0,
-        isRunning: false
-    });
+        isRunning: false,
+    })
+}
+
+function getExtensionSettings() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['backendUrl', 'extensionToken'], (data) => {
+            resolve({
+                backendUrl: (data.backendUrl || 'http://localhost:8000').trim(),
+                extensionToken: (data.extensionToken || '').trim(),
+            })
+        })
+    })
 }
 
 const stopTimer = async (taskNote) => {
-    chrome.storage.local.get(["elapsed", "isRunning"], (data) => {
-        if(!data.isRunning){
-            console.log("Timer is not running");
-            return;
-        }
+    const { backendUrl, extensionToken } = await getExtensionSettings()
+
+    if (!extensionToken) {
+        throw new Error('Missing extension token. Save it in popup settings first.')
+    }
+
+    const response = await fetch(`${backendUrl}/api/extension/taskNote`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${extensionToken}`,
+        },
+        body: JSON.stringify({ taskNote }),
     })
 
-    try{
-        const response = await fetch("http://localhost:8000/api/extension/taskNote", {
-            method: 'POST',
-            headers: {
-                "Content-Type": 'application/json'
-            },
-            body: JSON.stringify({taskNote: taskNote})
-        });
-        
-        const responseData = await response.json();
-        if(responseData.success) {
-            console.log("Task note sent successfully to backend");
-        } else {
-            console.error("Backend error:", responseData.message);
-        }
-    } catch(error) {
-        console.error("Task Tracker Backend API fetch failed", error.message)
+    const responseData = await response.json().catch(() => ({}))
+
+    if (!response.ok || !responseData.success) {
+        throw new Error(responseData.message || 'Backend rejected the extension request')
     }
 }

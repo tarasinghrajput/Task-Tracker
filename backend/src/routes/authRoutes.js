@@ -1,5 +1,6 @@
-const { register, login, logout, sendVerifyOtp, verifyOtp, isAuthenticated, sendPasswordResetOtp, resetPassword } = require('../controllers/authController.js')
+const { register, login, logout, sendVerifyOtp, verifyOtp, isAuthenticated, sendPasswordResetOtp, resetPassword, generateExtensionToken } = require('../controllers/authController.js')
 const { userAuth } = require('../middleware/userAuth.js')
+const { requireVerifiedEmail } = require('../middleware/resourceAuthorization.js')
 const express = require('express')
 const authRouter = express.Router()
 
@@ -11,6 +12,7 @@ authRouter.post('/verify-otp', userAuth, verifyOtp)
 authRouter.get('/is-authenticated', userAuth, isAuthenticated)
 authRouter.post('/send-reset-otp', sendPasswordResetOtp)
 authRouter.post('/reset-password', resetPassword)
+authRouter.post('/extension-token', userAuth, requireVerifiedEmail, generateExtensionToken)
 
 module.exports = {
     authRouter 

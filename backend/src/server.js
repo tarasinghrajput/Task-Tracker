@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser')
 const { authRouter } = require('./routes/authRoutes.js')
 const { taskRouter } = require('./routes/taskRoutes.js')
 const { sheetRouter } = require('./routes/sheetRoutes.js')
+const { extensionAuth } = require('./middleware/extensionAuth.js')
 
 const app = express()
 app.use(express.json())
@@ -25,16 +26,18 @@ app.use('/api/auth', authRouter)
 app.use('/api/task', taskRouter)
 app.use('/api/sheets', sheetRouter)
 
-app.post('/api/extension/taskNote', (req, res) => {
+app.post('/api/extension/taskNote', extensionAuth, (req, res) => {
     try {
-        const { taskNote } = req.body;
-    
-        if(!taskNote) return res.status(401).json({ success: false, message: "No taskNote received" })
-    
-        console.log("New taskNote appeared from extension", taskNote)
-        res.status(200).json({ success: true, message: "Task Note added from extension" })
+        const taskNote = req.body
+
+        if (!taskNote || !taskNote.taskNote) {
+            return res.status(400).json({ success: false, message: 'No taskNote received' })
+        }
+
+        console.log(`New taskNote appeared from extension for user ${req.user.id}`, taskNote)
+        return res.status(200).json({ success: true, message: 'Task Note added from extension' })
     } catch(error) {
-        res.status(500).json({ success: false, message: error.message })
+        return res.status(500).json({ success: false, message: error.message })
     }
 })
 

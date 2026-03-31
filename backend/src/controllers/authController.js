@@ -270,6 +270,28 @@ const resetPassword = async (req, res) => {
     }
 }
 
+const generateExtensionToken = async (req, res) => {
+    try {
+        const token = jwt.sign(
+            {
+                id: req.user.id,
+                type: 'extension',
+            },
+            secret,
+            { expiresIn: '30d' },
+        )
+
+        return res.status(200).json({
+            success: true,
+            message: 'Extension token generated successfully',
+            token,
+            expiresIn: '30d',
+        })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -278,5 +300,6 @@ module.exports = {
     verifyOtp,
     isAuthenticated,
     sendPasswordResetOtp,
-    resetPassword
+    resetPassword,
+    generateExtensionToken,
 }
