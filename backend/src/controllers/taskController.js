@@ -143,11 +143,105 @@ const addTask = async (req, res) => {
     }
 }
 
+const completeDraftTask = async (req, res) => {
+    const userId = req.user.id
+    const {
+        taskTimeElapsed,
+        taskDate,
+        taskCategory,
+        taskType,
+        taskTitle,
+        taskDescription,
+        taskPriority,
+        taskStatus,
+        impactArea,
+        impactLevel,
+        issueSource,
+        toolsInvolved,
+    } = req.body
+
+    if (!req.task?.isDraft) {
+        return res.status(400).json({ success: false, message: 'Only draft tasks can be completed' })
+    }
+
+    if (
+        !taskTimeElapsed ||
+        !taskDate ||
+        !taskCategory ||
+        !taskType ||
+        !taskTitle ||
+        !taskDescription ||
+        taskPriority === undefined ||
+        taskPriority === null ||
+        !taskStatus ||
+        !impactLevel ||
+        !impactArea ||
+        !issueSource ||
+        !toolsInvolved
+    ) {
+        return res.status(400).json({ success: false, message: 'Tasks data is not complete' })
+    }
+
+    const numericTaskPriority = Number(taskPriority)
+    if (Number.isNaN(numericTaskPriority) || numericTaskPriority < 0 || numericTaskPriority > 3) {
+        return res.status(400).json({ success: false, message: 'Invalid priority value' })
+    }
+
+    const normalizedTaskDate = parseTaskDateInput(taskDate)
+    if (!normalizedTaskDate) {
+        return res.status(400).json({ success: false, message: 'Invalid task date provided' })
+    }
+
+    const normalizedImpactLevel = impactLevel.toLowerCase()
+    if (!IMPACT_LEVELS.includes(normalizedImpactLevel)) {
+        return res.status(400).json({ success: false, message: 'Invalid impact level provided' })
+    }
+
+    try {
+        req.task.taskTimeElapsed = taskTimeElapsed
+        req.task.taskDate = normalizedTaskDate
+        req.task.taskCategory = taskCategory
+        req.task.taskType = taskType
+        req.task.taskTitle = taskTitle
+        req.task.taskDescription = taskDescription
+        req.task.taskPriority = numericTaskPriority
+        req.task.taskStatus = taskStatus
+        req.task.impactArea = impactArea
+        req.task.impactLevel = normalizedImpactLevel
+        req.task.issueSource = issueSource
+        req.task.toolsInvolved = toolsInvolved
+        req.task.isDraft = false
+        req.task.draftSource = ''
+
+        await req.task.save()
+
+        const syncResult = await syncTaskWithSheet(req.task, userId)
+        req.task.isSyncedToSheet = !!syncResult.synced
+        req.task.sheetSyncError = syncResult.reason && !syncResult.synced ? syncResult.reason : ''
+        await req.task.save()
+
+        const responseMessage = syncResult.synced
+            ? 'Draft task completed and synced successfully'
+            : syncResult.reason
+                ? `Draft task completed but not synced: ${syncResult.reason}`
+                : 'Draft task completed successfully'
+
+        return res.status(200).json({
+            success: true,
+            message: responseMessage,
+            task: req.task,
+            syncedToSheet: syncResult.synced,
+        })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 const getAllTask = async (req, res) => {
     const userId = req.user.id
 
     try {
-        const allTask = await Task.find({ userId })
+        const allTask = await Task.find({ userId }).sort({ createdAt: -1 })
         return res.status(200).json({ success: true, message: 'All Tasks Received', tasks: allTask })
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
@@ -189,6 +283,7 @@ const getNextTaskIdentifier = async (req, res) => {
 
 module.exports = {
     addTask,
+    completeDraftTask,
     getAllTask,
     getTaskById,
     deleteTask,
