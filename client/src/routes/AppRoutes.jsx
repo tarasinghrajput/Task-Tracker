@@ -5,6 +5,7 @@ import TaskDashboard from '../pages/TaskDashbord'
 import LoginPage from '../pages/LoginPage'
 import NotFound from '../pages/NotFound'
 import SignupPage from '../pages/SignupPage'
+import EmailVerificationPage from '../pages/EmailVerificationPage'
 import ProtectedRoute from './ProtectedRoute'
 import AppLayout from '../components/AppLayout.jsx'
 import SettingsPage from '../pages/SettingsPage.jsx'
@@ -19,6 +20,7 @@ const AppRoutes = () => {
 
             {/* Protected Pages */}
             <Route element={<ProtectedRoute />}>
+                <Route path="/verify-email" element={<EmailVerificationPage />} />
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<TaskDashboard />} />
                     <Route path="/taskForm" element={<TaskForm />} />

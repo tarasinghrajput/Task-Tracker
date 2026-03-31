@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import fetchAPI from '../api.js'
 import { useAuth } from '../auth/AuthContext.jsx'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 
 function SignupForm({ className, ...props }) {
-    const { setAuthenticated } = useAuth()
+    const { setAuthenticated, setIsEmailVerified, refreshAuth } = useAuth()
     const navigate = useNavigate()
     const [errors, setErrors] = useState({})
 
@@ -50,7 +50,9 @@ function SignupForm({ className, ...props }) {
 
             if (data.success) {
                 setAuthenticated(true)
-                navigate('/')
+                setIsEmailVerified(false)
+                await refreshAuth()
+                navigate('/verify-email')
             } else {
                 toast.error(data.message)
             }
@@ -89,7 +91,7 @@ function SignupForm({ className, ...props }) {
                                 <Button type="submit" className="cursor-pointer">Sign up</Button>
                             </Field>
                             <FieldDescription className="text-center">
-                                Already have an account? <a href="/login">Login</a>
+                                Already have an account? <Link to="/login">Login</Link>
                             </FieldDescription>
                         </FieldGroup>
                     </form>
