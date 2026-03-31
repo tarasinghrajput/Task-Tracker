@@ -207,7 +207,8 @@ const sendPasswordResetOtp = async (req, res) => {
     }
     
     try {
-        const user = await User.findOne({email: formEmail})
+        const normalizedEmail = formEmail.trim().toLowerCase()
+        const user = await User.findOne({ email: normalizedEmail })
         if(!user) {
             return res.status(401).json({ success: false, message: "User not found" })
         }
@@ -241,8 +242,8 @@ const resetPassword = async (req, res) => {
     }
     
     try {
-        
-        const user = await User.findOne({ email: formEmail })
+        const normalizedEmail = formEmail.trim().toLowerCase()
+        const user = await User.findOne({ email: normalizedEmail })
         if(!user) {
             return res.status(400).json({ success: false, message: "User not found" })
         }
