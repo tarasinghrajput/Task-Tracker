@@ -3,6 +3,7 @@ import fetchAPI from '../api.js'
 import { toast } from "sonner"
 import { Link } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
+import { Pencil } from 'lucide-react'
 import {
     Table,
     TableBody,
@@ -120,12 +121,14 @@ function TaskDashboard() {
                                             </TableCell>
                                             <TableCell className="flex justify-end gap-2">
                                                 {task.isDraft && (
-                                                    <Button asChild variant="outline" size="sm" type="button">
+                                                    <Button asChild variant="ghost" size="icon" type="button">
                                                         <Link
                                                             to="/taskForm"
                                                             state={{ draftTaskId: task._id, taskTimeElapsed: task.taskTimeElapsed }}
+                                                            aria-label="Edit draft task"
+                                                            title="Edit draft task"
                                                         >
-                                                            Complete
+                                                            <Pencil className="w-4 h-4" />
                                                         </Link>
                                                     </Button>
                                                 )}
