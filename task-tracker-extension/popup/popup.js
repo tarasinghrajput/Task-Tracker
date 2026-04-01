@@ -1,7 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const FLOATING_CONTROLLER_ENABLED_KEY = 'floatingControllerEnabled'
     const taskNoteInputField = document.getElementById('taskNote')
     const backendUrlInputField = document.getElementById('backendUrl')
     const extensionTokenInputField = document.getElementById('extensionToken')
+    const floatingControllerCheckbox = document.getElementById('floatingControllerEnabled')
     const settingsStatus = document.getElementById('settingsStatus')
 
     function updateUI() {
@@ -30,9 +32,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2500)
     }
 
-    chrome.storage.local.get(['backendUrl', 'extensionToken'], (data) => {
+    chrome.storage.local.get(['backendUrl', 'extensionToken', FLOATING_CONTROLLER_ENABLED_KEY], (data) => {
         backendUrlInputField.value = data.backendUrl || 'http://localhost:8000'
         extensionTokenInputField.value = data.extensionToken || ''
+        floatingControllerCheckbox.checked = data[FLOATING_CONTROLLER_ENABLED_KEY] !== false
     })
 
     document.getElementById('saveSettings').addEventListener('click', function () {
@@ -41,6 +44,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         chrome.storage.local.set({ backendUrl, extensionToken }, () => {
             showSettingsStatus('Settings saved')
+        })
+    })
+
+    floatingControllerCheckbox.addEventListener('change', function () {
+        const isEnabled = floatingControllerCheckbox.checked
+        chrome.storage.local.set({ [FLOATING_CONTROLLER_ENABLED_KEY]: isEnabled }, () => {
+            showSettingsStatus(isEnabled ? 'Floating controller enabled' : 'Floating controller hidden')
         })
     })
 

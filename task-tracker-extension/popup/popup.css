@@ -67,7 +67,8 @@ button {
 }
 
 #taskNote,
-.settings input {
+.settings input[type='text'],
+.settings input[type='password'] {
     width: 100%;
     box-sizing: border-box;
     padding: 10px;
@@ -90,6 +91,23 @@ button {
     font-size: 12px;
     margin-top: 8px;
     color: #cbd5e1;
+}
+
+.consent-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #cbd5e1;
+}
+
+.consent-toggle input[type='checkbox'] {
+    margin-top: 1px;
+}
+
+.consent-toggle span {
+    line-height: 1.35;
 }
 
 #settingsStatus {
