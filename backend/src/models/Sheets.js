@@ -3,6 +3,7 @@ const { mongoose } = require('mongoose')
 
 const Sheets = mongoose.Schema(
     {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         name: { type: String, required: true, },
         sheetURL: { type: String, required: true, },
         spreadsheetId: { type: String, required: true },

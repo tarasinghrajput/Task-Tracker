@@ -5,6 +5,8 @@ import TaskDashboard from '../pages/TaskDashbord'
 import LoginPage from '../pages/LoginPage'
 import NotFound from '../pages/NotFound'
 import SignupPage from '../pages/SignupPage'
+import EmailVerificationPage from '../pages/EmailVerificationPage'
+import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import ProtectedRoute from './ProtectedRoute'
 import AppLayout from '../components/AppLayout.jsx'
 import SettingsPage from '../pages/SettingsPage.jsx'
@@ -15,10 +17,12 @@ const AppRoutes = () => {
             {/* Public Pages */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
 
             {/* Protected Pages */}
             <Route element={<ProtectedRoute />}>
+                <Route path="/verify-email" element={<EmailVerificationPage />} />
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<TaskDashboard />} />
                     <Route path="/taskForm" element={<TaskForm />} />

@@ -6,6 +6,22 @@ const secret = process.env.JWT_SECRET
 // const { validationResult } = require('express-validator')
 const transporter = require('../config/nodemailer')
 
+const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000))
+
+const sendVerificationOtpEmail = async (user) => {
+    const otp = generateOtp()
+    user.verifyOtp = otp
+    user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000
+    await user.save()
+
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: user.email,
+        subject: 'Account Verification OTP',
+        text: `Your OTP is ${otp}. Verify your account using this OTP`,
+    })
+}
+
 const register = async (req, res) => {
     const { formEmail, formPassword } = req.body
 
@@ -13,7 +29,8 @@ const register = async (req, res) => {
         return res.status(400).json({ success: false, message: "Email and Password are required" })
     }
     try {
-        const existingUser = await User.findOne({ email: formEmail })
+        const normalizedEmail = formEmail.trim().toLowerCase()
+        const existingUser = await User.findOne({ email: normalizedEmail })
         if (existingUser) {
             return res.status(409).json({ success: false, message: "Email is registered" })
         }
@@ -21,7 +38,7 @@ const register = async (req, res) => {
         const date = new Date()
         const createdAt = date.toISOString()
 
-        const user = new User({ email: formEmail, passwordHash: hashedPassword, createdAt })
+        const user = new User({ email: normalizedEmail, passwordHash: hashedPassword, createdAt })
         await user.save()
 
         const token = jwt.sign({ id: user._id }, secret, { expiresIn: '7d' })
@@ -33,16 +50,16 @@ const register = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
-        // Sending Welcome Email
-        const mailOptions = {
-            from: process.env.SMTP_FROM,
-            to: formEmail,
-            subject: "Welcome to Task Tracker for AP",
-            text: `Welcome to the Task Tracker made only for Apnipathshala. Your registered email: ${formEmail} `
-        }
-        await transporter.sendMail(mailOptions)
+        await sendVerificationOtpEmail(user)
 
-        return res.status(200).json({ success: true, message: "Registered Successful" })
+        return res.status(200).json({
+            success: true,
+            message: "Registered successfully. Verify your email with OTP.",
+            user: {
+                email: user.email,
+                isEmailVerified: false,
+            },
+        })
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
     }
@@ -55,7 +72,8 @@ const login = async (req, res) => {
         return res.status(401).json({ success: false, message: "Email and Password are required" })
     }
     try {
-        const user = await User.findOne({email: formEmail})
+        const normalizedEmail = formEmail.trim().toLowerCase()
+        const user = await User.findOne({email: normalizedEmail})
         if(!user) {
             return res.status(402).json({ success: false, message: "Email is not registered" })
         }
@@ -75,7 +93,14 @@ const login = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
-        return res.status(200).json({ success: true, message: "Login Successful" })
+        return res.status(200).json({
+            success: true,
+            message: "Login Successful",
+            user: {
+                email: user.email,
+                isEmailVerified: Boolean(user.isEmailVerified),
+            },
+        })
         
     } catch(error) {
         return res.status(500).json({ success: false, message: error.message })
@@ -103,24 +128,15 @@ const sendVerifyOtp = async (req, res) => {
         const userId = req.user.id
         const user = await User.findById(userId)
 
+        if (!user) {
+            return res.status(401).json({ success: false, message: "User not found" })
+        }
+
         if(user.isEmailVerified) {
-            return res.status(402).json({ success: false, message: "Account is already verified" })
+            return res.status(200).json({ success: true, message: "Account is already verified" })
         }
 
-        const otp = String(Math.floor(100000 + Math.random() * 900000))
-
-        user.verifyOtp = otp
-        user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000
-
-        await user.save()
-
-        const mailOptions = {
-            from: process.env.SMTP_FROM,
-            to: user.email,
-            subject: "Account Verification OTP",
-            text: `Your OTP is ${otp}. Verify your account using this OTP`
-        }
-        await transporter.sendMail(mailOptions)
+        await sendVerificationOtpEmail(user)
         return res.status(200).json({ success: true, message: "Verification OTP is sent to user" })
 
     } catch(error) {
@@ -143,7 +159,11 @@ const verifyOtp = async (req, res) => {
             return res.status(401).json({ success: false, message: "User not found" })
         }
         
-        if(user.verifyOtp === '' || user.verifyOtp != otp) {
+        if (user.isEmailVerified) {
+            return res.status(200).json({ success: true, message: "Email already verified" })
+        }
+
+        if(user.verifyOtp === '' || user.verifyOtp !== otp) {
             return res.status(402).json({ success: false, message: "Invalid OTP" })
         }
         
@@ -165,7 +185,15 @@ const verifyOtp = async (req, res) => {
 
 const isAuthenticated = async (req, res) => {
     try {
-        return res.status(200).json({ success: true, message: "User is authenticated" })
+        return res.status(200).json({
+            success: true,
+            message: "User is authenticated",
+            user: {
+                id: req.user.id,
+                email: req.user.email,
+                isEmailVerified: Boolean(req.user.isEmailVerified),
+            },
+        })
     } catch(error) {
         return res.status(500).json({ success: false, message: error.message })
     }
@@ -179,7 +207,8 @@ const sendPasswordResetOtp = async (req, res) => {
     }
     
     try {
-        const user = await User.findOne({email: formEmail})
+        const normalizedEmail = formEmail.trim().toLowerCase()
+        const user = await User.findOne({ email: normalizedEmail })
         if(!user) {
             return res.status(401).json({ success: false, message: "User not found" })
         }
@@ -213,8 +242,8 @@ const resetPassword = async (req, res) => {
     }
     
     try {
-        
-        const user = await User.findOne({ email: formEmail })
+        const normalizedEmail = formEmail.trim().toLowerCase()
+        const user = await User.findOne({ email: normalizedEmail })
         if(!user) {
             return res.status(400).json({ success: false, message: "User not found" })
         }
@@ -241,6 +270,28 @@ const resetPassword = async (req, res) => {
     }
 }
 
+const generateExtensionToken = async (req, res) => {
+    try {
+        const token = jwt.sign(
+            {
+                id: req.user.id,
+                type: 'extension',
+            },
+            secret,
+            { expiresIn: '30d' },
+        )
+
+        return res.status(200).json({
+            success: true,
+            message: 'Extension token generated successfully',
+            token,
+            expiresIn: '30d',
+        })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -249,5 +300,6 @@ module.exports = {
     verifyOtp,
     isAuthenticated,
     sendPasswordResetOtp,
-    resetPassword
+    resetPassword,
+    generateExtensionToken,
 }

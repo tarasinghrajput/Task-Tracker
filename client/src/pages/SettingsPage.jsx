@@ -62,6 +62,8 @@ function SettingsPage() {
     const [connecting, setConnecting] = useState(false)
     const [syncing, setSyncing] = useState(false)
     const [showScriptGuide, setShowScriptGuide] = useState(false)
+    const [extensionToken, setExtensionToken] = useState('')
+    const [generatingExtensionToken, setGeneratingExtensionToken] = useState(false)
 
     const fetchSheetConfig = async () => {
         try {
@@ -145,6 +147,21 @@ function SettingsPage() {
             toast.error(error?.message || 'Failed to sync tasks')
         } finally {
             setSyncing(false)
+        }
+    }
+
+    const handleGenerateExtensionToken = async () => {
+        setGeneratingExtensionToken(true)
+        try {
+            const data = await fetchAPI('/auth/extension-token', {
+                method: 'POST',
+            })
+            setExtensionToken(data.token || '')
+            toast.success(data.message || 'Extension token generated successfully')
+        } catch (error) {
+            toast.error(error?.message || 'Failed to generate extension token')
+        } finally {
+            setGeneratingExtensionToken(false)
         }
     }
 
@@ -258,6 +275,39 @@ function SettingsPage() {
                         >
                             {syncing ? 'Syncing...' : 'Sync Pending Tasks'}
                         </Button>
+                    </CardContent>
+                </Card>
+
+                <Card className="md:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Browser Extension Authentication</CardTitle>
+                        <CardDescription>Generate a token and paste it in extension popup settings.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3">
+                        <div className="flex flex-wrap gap-2">
+                            <Button onClick={handleGenerateExtensionToken} disabled={generatingExtensionToken}>
+                                {generatingExtensionToken ? 'Generating...' : 'Generate Extension Token'}
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={!extensionToken}
+                                onClick={() => {
+                                    navigator.clipboard.writeText(extensionToken)
+                                    toast.success('Extension token copied to clipboard')
+                                }}
+                            >
+                                Copy Token
+                            </Button>
+                        </div>
+                        <Input
+                            readOnly
+                            value={extensionToken}
+                            placeholder="Generate token to view it here"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                            This token expires in 30 days. Regenerate if you suspect it is exposed.
+                        </p>
                     </CardContent>
                 </Card>
 

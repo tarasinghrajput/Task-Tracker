@@ -1,0 +1,122 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.timer-container {
+    text-align: center;
+    background: #1e1e1e;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    min-width: 360px;
+}
+
+#time {
+    font-size: 48px;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.row-controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 10px 18px;
+    margin: 5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.start {
+    background: #4CAF50;
+    color: white;
+}
+
+.stop {
+    background: #4CAF50;
+    color: white;
+}
+
+.pause {
+    background: #f39c12;
+    color: white;
+}
+
+.reset {
+    background: #e74c3c;
+    color: white;
+}
+
+.save {
+    background: #2563eb;
+    color: white;
+    width: 100%;
+    margin-top: 10px;
+}
+
+#taskNote,
+.settings input[type='text'],
+.settings input[type='password'] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #101826;
+    color: white;
+}
+
+.settings {
+    text-align: left;
+    margin-top: 16px;
+    border-top: 1px solid #333;
+    padding-top: 12px;
+}
+
+.settings label {
+    display: block;
+    font-size: 12px;
+    margin-top: 8px;
+    color: #cbd5e1;
+}
+
+.consent-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #cbd5e1;
+}
+
+.consent-toggle input[type='checkbox'] {
+    margin-top: 1px;
+}
+
+.consent-toggle span {
+    line-height: 1.35;
+}
+
+#settingsStatus {
+    min-height: 16px;
+    font-size: 12px;
+    color: #86efac;
+    margin-top: 8px;
+}
+
+button:hover {
+    opacity: 0.85;
+}

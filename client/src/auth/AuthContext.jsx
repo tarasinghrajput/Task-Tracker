@@ -7,38 +7,45 @@ export const AuthContext = createContext(null)
 export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true)
     const [authenticated, setAuthenticated] = useState(false)
-    // const [verified, setVerified] = useState(false)
-    // const [user, setUser] = useState(null)
+    const [isEmailVerified, setIsEmailVerified] = useState(false)
+    const [userEmail, setUserEmail] = useState('')
+
+    const refreshAuth = async () => {
+        try {
+            const data = await fetchAPI('/auth/is-authenticated', {
+                method: 'GET',
+            })
+
+            if (data.success) {
+                setAuthenticated(true)
+                setIsEmailVerified(Boolean(data.user?.isEmailVerified))
+                setUserEmail(data.user?.email || '')
+            } else {
+                setAuthenticated(false)
+                setIsEmailVerified(false)
+                setUserEmail('')
+            }
+        } catch {
+            setAuthenticated(false)
+            setIsEmailVerified(false)
+            setUserEmail('')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     useEffect(() => {
-        const checkAuth = async () => {
-            try {
-
-                const data = await fetchAPI('/auth/is-authenticated', {
-                    method: 'GET',
-                })
-
-                if(data.success) {
-                    setAuthenticated(true)
-                } else {
-                    setAuthenticated(false)
-                }
-            } catch {
-                setAuthenticated(false)
-            } finally {
-
-                setLoading(false)
-
-            }
-        }
-
-        checkAuth()
+        refreshAuth()
     }, [])
 
     const value = {
         loading,
         authenticated,
+        isEmailVerified,
+        userEmail,
         setAuthenticated,
+        setIsEmailVerified,
+        refreshAuth,
     }
 
     return (

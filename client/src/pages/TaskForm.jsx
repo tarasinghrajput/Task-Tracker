@@ -1,4 +1,4 @@
-import { useLocation, Link } from 'react-router-dom'
+import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { toast } from "sonner"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -31,12 +31,30 @@ const formatDateForDisplay = (date) => {
 
 function TaskForm() {
     const location = useLocation()
-    const taskTimeElapsed = typeof location.state === 'string'
+    const navigate = useNavigate()
+    const draftTaskId = location.state?.draftTaskId || ''
+    const initialTaskTimeElapsed = typeof location.state === 'string'
         ? location.state
         : location.state?.taskTimeElapsed || '00:00:00'
+    const [taskTimeElapsed, setTaskTimeElapsed] = useState(initialTaskTimeElapsed)
     const [taskId, setTaskId] = useState('')
     const [loadingTaskId, setLoadingTaskId] = useState(false)
-    const [dateInput] = useState(formatDateForDisplay(new Date()))
+    const [dateInput, setDateInput] = useState(formatDateForDisplay(new Date()))
+    const [loadingDraft, setLoadingDraft] = useState(false)
+    const [isDraftMode, setIsDraftMode] = useState(Boolean(draftTaskId))
+    const [formRenderKey, setFormRenderKey] = useState(0)
+    const [draftDefaults, setDraftDefaults] = useState({
+        taskCategory: CATEGORY_OPTIONS[0],
+        taskType: '',
+        taskTitle: '',
+        taskDescription: '',
+        taskPriority: 1,
+        taskStatus: 'in-progress',
+        impactArea: '',
+        impactLevel: 'medium',
+        issueSource: '',
+        toolsInvolved: '',
+    })
 
     const fetchNextTaskId = async () => {
         setLoadingTaskId(true)
@@ -50,9 +68,51 @@ function TaskForm() {
         }
     }
 
+    const loadDraftTask = async () => {
+        setLoadingDraft(true)
+        try {
+            const data = await fetchAPI(`/task/${draftTaskId}`, { method: 'GET' })
+            const draftTask = data.task
+
+            if (!draftTask || !draftTask.isDraft) {
+                toast.error('Draft task not found')
+                navigate('/', { replace: true })
+                return
+            }
+
+            setTaskId(draftTask.taskIdentifier || '')
+            setTaskTimeElapsed(draftTask.taskTimeElapsed || initialTaskTimeElapsed)
+            setDateInput(formatDateForDisplay(new Date(draftTask.taskDate || Date.now())))
+            setDraftDefaults({
+                taskCategory: draftTask.taskCategory || CATEGORY_OPTIONS[0],
+                taskType: draftTask.taskType || '',
+                taskTitle: draftTask.taskTitle || '',
+                taskDescription: draftTask.taskDescription || '',
+                taskPriority: Number.isNaN(Number(draftTask.taskPriority)) ? 1 : Number(draftTask.taskPriority),
+                taskStatus: draftTask.taskStatus && draftTask.taskStatus !== 'draft' ? draftTask.taskStatus : 'pending',
+                impactArea: draftTask.impactArea || '',
+                impactLevel: draftTask.impactLevel || 'medium',
+                issueSource: draftTask.issueSource || '',
+                toolsInvolved: draftTask.toolsInvolved || '',
+            })
+            setIsDraftMode(true)
+            setFormRenderKey((prev) => prev + 1)
+        } catch (error) {
+            toast.error(error?.message || 'Unable to load draft task')
+            navigate('/', { replace: true })
+        } finally {
+            setLoadingDraft(false)
+        }
+    }
+
     useEffect(() => {
+        if (draftTaskId) {
+            loadDraftTask()
+            return
+        }
+
         fetchNextTaskId()
-    }, [])
+    }, [draftTaskId])
 
     const handleTaskFormData = async (event) => {
         event.preventDefault()
@@ -74,19 +134,28 @@ function TaskForm() {
             toolsInvolved: formData.get('tf-toolsInvolved'),
         }
 
-        const saveTaskPromise = fetchAPI("/task/add-task", {
-            method: "POST",
+        const endpoint = isDraftMode
+            ? `/task/${draftTaskId}/complete`
+            : '/task/add-task'
+        const method = isDraftMode ? 'PATCH' : 'POST'
+
+        const saveTaskPromise = fetchAPI(endpoint, {
+            method,
             body: JSON.stringify(newTask),
         }).then((data) => {
-            formElement.reset()
-            fetchNextTaskId()
+            if (isDraftMode) {
+                navigate('/', { replace: true })
+            } else {
+                formElement.reset()
+                fetchNextTaskId()
+            }
             return data
         })
 
         toast.promise(saveTaskPromise, {
-            loading: "Adding task...",
-            success: (data) => data.message || "Task added successfully",
-            error: (error) => error?.message || "Failed to add task. Please try again.",
+            loading: isDraftMode ? "Completing draft task..." : "Adding task...",
+            success: (data) => data.message || (isDraftMode ? "Draft completed successfully" : "Task added successfully"),
+            error: (error) => error?.message || (isDraftMode ? "Failed to complete draft task." : "Failed to add task. Please try again."),
         })
 
     }
@@ -104,11 +173,11 @@ function TaskForm() {
                             </Button>
                         </ButtonGroup>
                     </nav>
-                    <h2 className="text-5xl font-bold text-gray-900 mt-10 mb-10">Task Form Entries</h2>
+                    <h2 className="text-5xl font-bold text-gray-900 mt-10 mb-10">{isDraftMode ? 'Complete Draft Task' : 'Task Form Entries'}</h2>
                     <h3 className="text-2xl font-semibold">Task Time: {taskTimeElapsed}</h3>
                 </div>
                 <div className="tf-form border-1 border-solid py-8 px-12 mt-20 w-200 rounded-sm">
-                    <form onSubmit={handleTaskFormData} id='tf-form' className="grid grid-cols-2 gap-6">
+                    <form key={formRenderKey} onSubmit={handleTaskFormData} id='tf-form' className="grid grid-cols-2 gap-6">
                         <label htmlFor="tf-taskId" className="flex flex-col items-start text-l font-semibold">
                             Task ID
                             <input
@@ -149,7 +218,7 @@ function TaskForm() {
                             <select
                                 name="tf-taskCategory"
                                 id="tf-taskCategory"
-                                defaultValue={CATEGORY_OPTIONS[0]}
+                                defaultValue={draftDefaults.taskCategory}
                                 className="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-sm focus:ring-brand focus:border-brand shadow-xs"
                             >
                                 {CATEGORY_OPTIONS.map((option) => (
@@ -159,26 +228,26 @@ function TaskForm() {
                         </label>
                         <label htmlFor="tf-taskType" className="flex flex-col items-start text-l font-semibold col-span-2">
                             Task Type
-                            <input type="text" name="tf-taskType" id="tf-taskType" placeholder="e.g. API integration" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder-gray-400" required />
+                            <input type="text" name="tf-taskType" id="tf-taskType" defaultValue={draftDefaults.taskType} placeholder="e.g. API integration" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder-gray-400" required />
                         </label>
                         <label htmlFor="tf-taskTitle" className="flex flex-col items-start text-l font-semibold col-span-2">
                             Task Title
-                            <input type="text" name="tf-taskTitle" id="tf-taskTitle" placeholder="Enter a concise task title" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder-gray-400" required />
+                            <input type="text" name="tf-taskTitle" id="tf-taskTitle" defaultValue={draftDefaults.taskTitle} placeholder="Enter a concise task title" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder-gray-400" required />
                         </label>
                         <label htmlFor="tf-taskDescription" className="flex flex-col items-start text-l font-semibold col-span-2">
                             Detailed Description
-                            <textarea name="tf-taskDescription" id="tf-taskDescription" placeholder="Add all the relevant details" className="shadow appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline min-h-32" required></textarea>
+                            <textarea name="tf-taskDescription" id="tf-taskDescription" defaultValue={draftDefaults.taskDescription} placeholder="Add all the relevant details" className="shadow appearance-none border rounded w-full py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline min-h-32" required></textarea>
                         </label>
                         <label htmlFor="tf-taskPriority" className="flex flex-col items-start text-l font-semibold">
                             Task Priority (0-3)
-                            <input type="number" name="tf-taskPriority" id="tf-taskPriority" min="0" max="3" step="1" defaultValue="1" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+                            <input type="number" name="tf-taskPriority" id="tf-taskPriority" min="0" max="3" step="1" defaultValue={draftDefaults.taskPriority} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
                         </label>
                         <label htmlFor="tf-taskStatus" className="flex flex-col items-start text-l font-semibold">
                             Status
                             <select
                                 name="tf-taskStatus"
                                 id="tf-taskStatus"
-                                defaultValue="in-progress"
+                                defaultValue={draftDefaults.taskStatus}
                                 className="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-sm focus:ring-brand focus:border-brand shadow-xs"
                             >
                                 <option value="pending">Pending</option>
@@ -189,14 +258,14 @@ function TaskForm() {
                         </label>
                         <label htmlFor="tf-impactArea" className="flex flex-col items-start text-l font-semibold">
                             Impact Area
-                            <input type="text" name="tf-impactArea" id="tf-impactArea" placeholder="e.g. Checkout flow" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+                            <input type="text" name="tf-impactArea" id="tf-impactArea" defaultValue={draftDefaults.impactArea} placeholder="e.g. Checkout flow" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
                         </label>
                         <label htmlFor="tf-impactLevel" className="flex flex-col items-start text-l font-semibold">
                             Impact Level
                             <select
                                 name="tf-impactLevel"
                                 id="tf-impactLevel"
-                                defaultValue="medium"
+                                defaultValue={draftDefaults.impactLevel}
                                 className="block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-sm focus:ring-brand focus:border-brand shadow-xs"
                             >
                                 <option value="low">Low</option>
@@ -206,17 +275,17 @@ function TaskForm() {
                         </label>
                         <label htmlFor="tf-issueSource" className="flex flex-col items-start text-l font-semibold">
                             Error / Issue Source
-                            <input type="text" name="tf-issueSource" id="tf-issueSource" placeholder="e.g. Lighthouse audit" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+                            <input type="text" name="tf-issueSource" id="tf-issueSource" defaultValue={draftDefaults.issueSource} placeholder="e.g. Lighthouse audit" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
                         </label>
                         <label htmlFor="tf-toolsInvolved" className="flex flex-col items-start text-l font-semibold">
                             Tools / Plugins Involved
-                            <input type="text" name="tf-toolsInvolved" id="tf-toolsInvolved" placeholder="e.g. RankMath, Cloudflare" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+                            <input type="text" name="tf-toolsInvolved" id="tf-toolsInvolved" defaultValue={draftDefaults.toolsInvolved} placeholder="e.g. RankMath, Cloudflare" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
                         </label>
                         <div className="col-span-2">
                             <input
                                 type="submit"
-                                value="Add Task"
-                                disabled={loadingTaskId || !taskId}
+                                value={isDraftMode ? 'Complete Draft Task' : 'Add Task'}
+                                disabled={loadingTaskId || loadingDraft || !taskId}
                                 className="bg-gray-800 text-white p-3 rounded-sm cursor-pointer hover:bg-gray-700 w-full disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                         </div>

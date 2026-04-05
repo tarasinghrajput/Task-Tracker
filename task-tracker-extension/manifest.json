@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Task Tracker",
+  "version": "1.0",
+  "description": "Track tasks and sync with Task Tracker",
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "/task-tracker-extension.png"
+  },
+
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/floating-timer.js"],
+      "css": ["content/floating-timer.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "permissions": ["scripting", "tabs", "storage"],
+
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://yourdomain.com/*"
+  ]
+}

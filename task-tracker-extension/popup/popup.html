@@ -1,0 +1,38 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="timer-container">
+        <div id="time">00:00:00</div>
+        <div class="row-controls">
+            <button class="start" id="start">Start</button>
+            <button class="pause" id="pause">Pause</button>
+            <button class="reset" id="reset">Reset</button>
+            <button class="stop" id="stop">Stop</button>
+        </div>
+        <input type="text" name="taskNote" id="taskNote" placeholder="Task note">
+
+        <div class="settings">
+            <label for="backendUrl">Backend URL</label>
+            <input type="text" id="backendUrl" placeholder="http://localhost:8000">
+
+            <label for="extensionToken">Extension Token</label>
+            <input type="password" id="extensionToken" placeholder="Paste extension auth token">
+
+            <label class="consent-toggle" for="floatingControllerEnabled">
+                <input type="checkbox" id="floatingControllerEnabled">
+                <span>I consent to show a floating timer controller on websites.</span>
+            </label>
+
+            <button class="save" id="saveSettings">Save Settings</button>
+            <p id="settingsStatus"></p>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

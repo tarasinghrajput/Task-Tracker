@@ -3,6 +3,7 @@ import fetchAPI from '../api.js'
 import { toast } from "sonner"
 import { Link } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
+import { Pencil } from 'lucide-react'
 import {
     Table,
     TableBody,
@@ -103,16 +104,34 @@ function TaskDashboard() {
                                             <TableCell className="font-semibold">{task.taskIdentifier}</TableCell>
                                             <TableCell>{formatTaskDate(task.taskDate)}</TableCell>
                                             <TableCell>{task.taskTitle}</TableCell>
-                                            <TableCell>{task.taskCategory}</TableCell>
-                                            <TableCell>{task.taskStatus}</TableCell>
+                                            <TableCell>{task.taskCategory || '—'}</TableCell>
+                                            <TableCell className="capitalize">
+                                                {task.isDraft ? 'draft' : task.taskStatus}
+                                            </TableCell>
                                             <TableCell className="capitalize">{task.impactLevel}</TableCell>
                                             <TableCell className="text-right">{task.taskTimeElapsed}</TableCell>
                                             <TableCell className="text-right">
-                                                <span className={task.isSyncedToSheet ? "text-green-600 text-sm font-medium" : "text-amber-600 text-sm font-medium"}>
-                                                    {task.isSyncedToSheet ? 'Synced' : 'Pending'}
+                                                <span className={task.isDraft
+                                                    ? 'text-slate-500 text-sm font-medium'
+                                                    : task.isSyncedToSheet
+                                                        ? "text-green-600 text-sm font-medium"
+                                                        : "text-amber-600 text-sm font-medium"}>
+                                                    {task.isDraft ? 'Draft' : task.isSyncedToSheet ? 'Synced' : 'Pending'}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="flex justify-end">
+                                            <TableCell className="flex justify-end gap-2">
+                                                {task.isDraft && (
+                                                    <Button asChild variant="ghost" size="icon" type="button">
+                                                        <Link
+                                                            to="/taskForm"
+                                                            state={{ draftTaskId: task._id, taskTimeElapsed: task.taskTimeElapsed }}
+                                                            aria-label="Edit draft task"
+                                                            title="Edit draft task"
+                                                        >
+                                                            <Pencil className="w-4 h-4" />
+                                                        </Link>
+                                                    </Button>
+                                                )}
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"

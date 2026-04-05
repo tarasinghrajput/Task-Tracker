@@ -2,6 +2,7 @@ const Sheets = require('../models/Sheets')
 const { syncPendingTasksWithSheet, getDefaultSheetConfig } = require('../services/taskSheetSync')
 
 const connectSheet = async (req, res) => {
+    const userId = req.user.id
     const { displayName, spreadsheetId, sheetName, sheetURL, appsScriptUrl } = req.body
 
     if (!spreadsheetId || !sheetName || !appsScriptUrl) {
@@ -12,11 +13,12 @@ const connectSheet = async (req, res) => {
     const normalizedURL = sheetURL || `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
 
     try {
-        await Sheets.updateMany({}, { $set: { isDefault: false } })
+        await Sheets.updateMany({ userId }, { $set: { isDefault: false } })
 
         const sheetConfig = await Sheets.findOneAndUpdate(
-            { spreadsheetId },
+            { spreadsheetId, userId },
             {
+                userId,
                 name,
                 sheetURL: normalizedURL,
                 spreadsheetId,
@@ -34,8 +36,9 @@ const connectSheet = async (req, res) => {
 }
 
 const getSheetConnection = async (req, res) => {
+    const userId = req.user.id
     try {
-        const config = await getDefaultSheetConfig()
+        const config = await getDefaultSheetConfig(userId)
         if (!config) {
             return res.status(200).json({ success: true, sheet: null })
         }
@@ -45,9 +48,34 @@ const getSheetConnection = async (req, res) => {
     }
 }
 
-const syncPendingTasks = async (req, res) => {
+const getSheetById = async (req, res) => {
     try {
-        const result = await syncPendingTasksWithSheet()
+        return res.status(200).json({ success: true, sheet: req.sheet })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const deleteSheetById = async (req, res) => {
+    try {
+        await Sheets.deleteOne({ _id: req.sheet._id })
+
+        const nextDefault = await Sheets.findOne({ userId: req.user.id }).sort({ _id: -1 })
+        if (nextDefault) {
+            nextDefault.isDefault = true
+            await nextDefault.save()
+        }
+
+        return res.status(200).json({ success: true, message: 'Sheet deleted successfully' })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const syncPendingTasks = async (req, res) => {
+    const userId = req.user.id
+    try {
+        const result = await syncPendingTasksWithSheet(userId)
         return res.status(200).json({
             success: true,
             message: `${result.syncedCount} task(s) synced with Google Sheets`,
@@ -61,5 +89,7 @@ const syncPendingTasks = async (req, res) => {
 module.exports = {
     connectSheet,
     getSheetConnection,
+    getSheetById,
+    deleteSheetById,
     syncPendingTasks,
 }

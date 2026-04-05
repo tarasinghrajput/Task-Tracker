@@ -1,8 +1,11 @@
-const { mongoose } = require('mongoose')
+const mongoose = require('mongoose')
 
 const connectDB = async () => {
-    const uri = `${process.env.MONGO_URI}/ap-task-tracker`
-    if(!uri) {
+    const uri = `${process.env.MONGO_URI}`
+    if (!process.env.MONGO_URI) {
+        throw new Error('MONGO_URI absent in .env')
+    }
+    if (!uri) {
         throw new Error('MONGO_URI absent in .env')
     }
 
@@ -12,7 +15,7 @@ const connectDB = async () => {
         })
 
         console.log('Mongo DB connected successfully')
-    } catch(error) {
+    } catch (error) {
         console.error("Mongo DB not connected", error.message)
         process.exit(1)
     }

@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import fetchAPI from '../api.js'
 import { useAuth } from '../auth/AuthContext.jsx'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 
 function LoginForm({ className, ...props }) {
-    const { setAuthenticated } = useAuth()
+    const { setAuthenticated, setIsEmailVerified, refreshAuth } = useAuth()
     const navigate = useNavigate()
     const [errors, setErrors] = useState({})
 
@@ -50,7 +50,10 @@ function LoginForm({ className, ...props }) {
 
             if (data.success) {
                 setAuthenticated(true)
-                navigate('/')
+                const verified = Boolean(data.user?.isEmailVerified)
+                setIsEmailVerified(verified)
+                await refreshAuth()
+                navigate(verified ? '/' : '/verify-email')
             }
         } catch (error) {
             toast.error(error?.message || "Login failed. Please try again.")
@@ -78,7 +81,9 @@ function LoginForm({ className, ...props }) {
                             <Field>
                                 <div className="flex items-center">
                                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                                    <a href="#" className="ml-auto text-sm underline-offset-2 hover:underline">Forgot your password?</a>
+                                    <Link to="/forgot-password" className="ml-auto text-sm underline-offset-2 hover:underline">
+                                        Forgot your password?
+                                    </Link>
                                 </div>
                                 <Input id="password" name="password" type="password" required />
                             </Field>
@@ -87,7 +92,7 @@ function LoginForm({ className, ...props }) {
                                 <Button type="submit" className="cursor-pointer">Login</Button>
                             </Field>
                             <FieldDescription className="text-center">
-                                Don&apos;t have an account? <a href="/signup">Sign up</a>
+                                Don&apos;t have an account? <Link to="/signup">Sign up</Link>
                             </FieldDescription>
                         </FieldGroup>
                     </form>
