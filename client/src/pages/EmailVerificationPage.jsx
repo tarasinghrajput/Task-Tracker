@@ -7,16 +7,18 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 
 function EmailVerificationPage() {
     const navigate = useNavigate()
     const hasRequestedOtp = useRef(false)
     const [otp, setOtp] = useState('')
     const [sendingOtp, setSendingOtp] = useState(false)
+    const [initialSending, setInitialSending] = useState(true)
     const [verifying, setVerifying] = useState(false)
     const { userEmail, refreshAuth } = useAuth()
 
-    const sendOtp = async () => {
+    const sendOtp = async (isInitial = false) => {
         setSendingOtp(true)
         try {
             const data = await fetchAPI('/auth/send-verify-otp', {
@@ -27,16 +29,20 @@ function EmailVerificationPage() {
             toast.error(error?.message || 'Failed to send verification OTP')
         } finally {
             setSendingOtp(false)
+            if (isInitial) {
+                setInitialSending(false)
+            }
         }
     }
 
     useEffect(() => {
         if (hasRequestedOtp.current) {
+            setInitialSending(false)
             return
         }
 
         hasRequestedOtp.current = true
-        sendOtp()
+        sendOtp(true)
     }, [])
 
     const handleVerify = async (event) => {
@@ -61,6 +67,24 @@ function EmailVerificationPage() {
         } finally {
             setVerifying(false)
         }
+    }
+
+    if (initialSending) {
+        return (
+            <div className="flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
+                <Card className="w-full max-w-md">
+                    <CardHeader className="text-center">
+                        <CardTitle>Sending Verification OTP</CardTitle>
+                        <CardDescription>
+                            Sending an OTP to <strong>{userEmail || 'your email'}</strong>...
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex justify-center py-6">
+                        <Spinner />
+                    </CardContent>
+                </Card>
+            </div>
+        )
     }
 
     return (
@@ -90,7 +114,7 @@ function EmailVerificationPage() {
                         <Button type="submit" disabled={verifying}>
                             {verifying ? 'Verifying...' : 'Verify Email'}
                         </Button>
-                        <Button type="button" variant="outline" onClick={sendOtp} disabled={sendingOtp}>
+                        <Button type="button" variant="outline" onClick={() => sendOtp(false)} disabled={sendingOtp}>
                             {sendingOtp ? 'Sending OTP...' : 'Resend OTP'}
                         </Button>
                     </form>

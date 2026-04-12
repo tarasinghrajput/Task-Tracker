@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { Eye, EyeOff } from "lucide-react"
 
 function SignupForm({ className, ...props }) {
     const { setAuthenticated, setIsEmailVerified, refreshAuth } = useAuth()
     const navigate = useNavigate()
     const [errors, setErrors] = useState({})
+    const [showPassword, setShowPassword] = useState(false)
 
     function validate(formEmail, formPassword) {
         let tempErrors = {}
@@ -80,7 +82,17 @@ function SignupForm({ className, ...props }) {
                                 <div className="flex items-center">
                                     <FieldLabel htmlFor="password">Password</FieldLabel>
                                 </div>
-                                <Input id="password" name="password" type="password" required />
+                                <div className="relative">
+                                    <Input id="password" name="password" type={showPassword ? "text" : "password"} required />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword((prev) => !prev)}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </Field>
                             {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
                             <Field>
