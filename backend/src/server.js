@@ -8,6 +8,7 @@ const { taskRouter } = require('./routes/taskRoutes.js')
 const { sheetRouter } = require('./routes/sheetRoutes.js')
 const { extensionAuth } = require('./middleware/extensionAuth.js')
 const Task = require('./models/Task.js')
+const logger = require('./config/logger')
 
 const app = express()
 app.use(express.json())
@@ -15,10 +16,29 @@ app.use(cookieParser())
 app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }))
 const PORT = process.env.PORT || 8000
 
+app.use((req, res, next) => {
+    const start = Date.now()
+
+    res.on('finish', () => {
+        const duration = Date.now() - start
+        const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
+
+        logger.log(level, `${req.method} ${req.originalUrl} ${res.statusCode}`, {
+            method: req.method,
+            path: req.originalUrl,
+            statusCode: res.statusCode,
+            durationMs: duration,
+            ip: req.ip,
+            userAgent: req.get('user-agent'),
+        })
+    })
+
+    next()
+})
+
 connectDB()
 app.set('trust proxy', 1)
 
-// API Endpoint
 app.get('/api/health', (req, res) => {
     res.status(200).json({message: "ok", timestamp: new Date()})
 })
@@ -71,10 +91,11 @@ app.post('/api/extension/taskNote', extensionAuth, async (req, res) => {
             task: draftTask,
         })
     } catch(error) {
+        logger.error('Extension task draft creation failed', { error: error.message, userId: req.user?.id })
         return res.status(500).json({ success: false, message: error.message })
     }
 })
 
 app.listen(PORT, () => {
-    console.log(`Server is listening on PORT = ${PORT}`)
+    logger.info(`Server is listening on PORT = ${PORT}`, { port: PORT, nodeEnv: process.env.NODE_ENV || 'development' })
 })

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const logger = require('../config/logger')
 
 const extractToken = (req) => {
     const cookieToken = req.cookies?.token
@@ -19,6 +20,7 @@ const userAuth = async (req, res, next) => {
     const token = extractToken(req)
 
     if (!token) {
+        logger.warn('Auth middleware: missing token')
         return res.status(401).json({ success: false, message: 'Not authorized login again' })
     }
 
@@ -26,12 +28,14 @@ const userAuth = async (req, res, next) => {
         const tokenDecode = jwt.verify(token, process.env.JWT_SECRET)
 
         if (!tokenDecode.id) {
+            logger.warn('Auth middleware: token missing id field')
             return res.status(401).json({ success: false, message: 'Not authorized login again' })
         }
 
         const user = await User.findById(tokenDecode.id).select('_id email isActive isEmailVerified')
 
         if (!user || !user.isActive) {
+            logger.warn('Auth middleware: user inactive or not found', { userId: tokenDecode.id })
             return res.status(401).json({ success: false, message: 'User account is inactive or unavailable' })
         }
 
@@ -43,6 +47,7 @@ const userAuth = async (req, res, next) => {
 
         return next()
     } catch (error) {
+        logger.warn('Auth middleware: invalid or expired token', { error: error.message })
         return res.status(401).json({ success: false, message: 'Invalid or expired authentication token' })
     }
 }

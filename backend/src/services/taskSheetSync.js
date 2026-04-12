@@ -2,6 +2,7 @@ const { mongoose } = require('mongoose')
 const Sheets = require('../models/Sheets')
 const Task = require('../models/Task')
 const { sendTasksToAppsScript } = require('./appsScriptClient')
+const logger = require('../config/logger')
 
 const formatTaskForSheet = (task) => {
     const formatDate = (value) => {
@@ -65,12 +66,14 @@ const syncTaskWithSheet = async (task, userId) => {
             { $set: { isSyncedToSheet: true, sheetSyncError: '' } },
         )
 
+        logger.info('Task synced with sheet', { taskId: task._id, userId })
         return { synced: true }
     } catch (error) {
         await Task.updateOne(
             { _id: task._id },
             { $set: { isSyncedToSheet: false, sheetSyncError: error.message } },
         )
+        logger.error('Task sheet sync failed', { taskId: task._id, userId, error: error.message })
         return { synced: false, reason: error.message }
     }
 }
@@ -112,8 +115,10 @@ const syncPendingTasksWithSheet = async (userId) => {
             { $set: { isSyncedToSheet: true, sheetSyncError: '' } },
         )
 
+        logger.info('Batch sync completed', { userId, syncedCount: pendingTasks.length })
         return { syncedCount: pendingTasks.length, total: pendingTasks.length }
     } catch (error) {
+        logger.error('Batch sync failed', { userId, error: error.message })
         throw new Error(error.message)
     }
 }

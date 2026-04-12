@@ -1,5 +1,6 @@
 const Sheets = require('../models/Sheets')
 const { syncPendingTasksWithSheet, getDefaultSheetConfig } = require('../services/taskSheetSync')
+const logger = require('../config/logger')
 
 const connectSheet = async (req, res) => {
     const userId = req.user.id
@@ -31,6 +32,7 @@ const connectSheet = async (req, res) => {
 
         return res.status(200).json({ success: true, message: 'Google Sheet connected successfully', sheet: sheetConfig })
     } catch (error) {
+        logger.error('Connect sheet error', { error: error.message, userId })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -44,6 +46,7 @@ const getSheetConnection = async (req, res) => {
         }
         return res.status(200).json({ success: true, sheet: config })
     } catch (error) {
+        logger.error('Get sheet connection error', { error: error.message, userId })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -52,6 +55,7 @@ const getSheetById = async (req, res) => {
     try {
         return res.status(200).json({ success: true, sheet: req.sheet })
     } catch (error) {
+        logger.error('Get sheet by ID error', { error: error.message, sheetId: req.sheet?._id })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -66,8 +70,10 @@ const deleteSheetById = async (req, res) => {
             await nextDefault.save()
         }
 
+        logger.info('Sheet deleted', { sheetId: req.sheet._id, userId: req.user.id })
         return res.status(200).json({ success: true, message: 'Sheet deleted successfully' })
     } catch (error) {
+        logger.error('Delete sheet error', { error: error.message, sheetId: req.sheet?._id, userId: req.user.id })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -76,12 +82,14 @@ const syncPendingTasks = async (req, res) => {
     const userId = req.user.id
     try {
         const result = await syncPendingTasksWithSheet(userId)
+        logger.info('Pending tasks synced', { userId, syncedCount: result.syncedCount })
         return res.status(200).json({
             success: true,
             message: `${result.syncedCount} task(s) synced with Google Sheets`,
             ...result,
         })
     } catch (error) {
+        logger.error('Sync pending tasks error', { error: error.message, userId })
         return res.status(500).json({ success: false, message: error.message })
     }
 }

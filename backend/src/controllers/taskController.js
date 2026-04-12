@@ -1,5 +1,6 @@
 const Task = require('../models/Task.js')
 const { syncTaskWithSheet } = require('../services/taskSheetSync')
+const logger = require('../config/logger')
 
 const TASK_IDENTIFIER_PREFIX = 'TASK-'
 const TASK_IDENTIFIER_REGEX = /^TASK-\d{3,}$/i
@@ -139,6 +140,7 @@ const addTask = async (req, res) => {
             syncedToSheet: syncResult.synced,
         })
     } catch (error) {
+        logger.error('Add task error', { error: error.message, userId })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -233,6 +235,7 @@ const completeDraftTask = async (req, res) => {
             syncedToSheet: syncResult.synced,
         })
     } catch (error) {
+        logger.error('Complete draft task error', { error: error.message, userId, taskId: req.task?._id })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -244,6 +247,7 @@ const getAllTask = async (req, res) => {
         const allTask = await Task.find({ userId }).sort({ createdAt: -1 })
         return res.status(200).json({ success: true, message: 'All Tasks Received', tasks: allTask })
     } catch (error) {
+        logger.error('Get all tasks error', { error: error.message, userId })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -252,6 +256,7 @@ const getTaskById = async (req, res) => {
     try {
         return res.status(200).json({ success: true, task: req.task })
     } catch (error) {
+        logger.error('Get task by ID error', { error: error.message, taskId: req.task?._id })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -265,8 +270,10 @@ const deleteTask = async (req, res) => {
 
     try {
         await Task.deleteOne({ _id: req.task._id })
+        logger.info('Task deleted', { taskId: id, userId: req.user.id })
         return res.status(200).json({ success: true, message: 'Task deleted successfully' })
     } catch (error) {
+        logger.error('Delete task error', { error: error.message, taskId: id, userId: req.user.id })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
@@ -277,6 +284,7 @@ const getNextTaskIdentifier = async (req, res) => {
         const nextId = await getNextTaskIdentifierValue(userId)
         return res.status(200).json({ success: true, nextId })
     } catch (error) {
+        logger.error('Get next task identifier error', { error: error.message, userId })
         return res.status(500).json({ success: false, message: error.message })
     }
 }
