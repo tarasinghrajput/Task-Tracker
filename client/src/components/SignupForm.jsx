@@ -48,14 +48,10 @@ function SignupForm({ className, ...props }) {
                 body: JSON.stringify({ formEmail, formPassword }),
             })
 
-            if (data.success) {
-                setAuthenticated(true)
-                setIsEmailVerified(false)
-                await refreshAuth()
-                navigate('/verify-email')
-            } else {
-                toast.error(data.message)
-            }
+            setAuthenticated(true)
+            setIsEmailVerified(false)
+            await refreshAuth()
+            navigate('/verify-email')
         } catch (error) {
             toast.error(error?.message || "Signup failed. Please try again.")
         }

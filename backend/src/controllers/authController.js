@@ -10,7 +10,7 @@ const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000))
 
 const sendVerificationOtpEmail = async (user) => {
     const otp = generateOtp()
-    user.verifyOtp = otp
+    user.verifyOtp = await bcrypt.hash(otp, 10)
     user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000
     await user.save()
 
@@ -46,7 +46,7 @@ const register = async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
@@ -75,13 +75,13 @@ const login = async (req, res) => {
         const normalizedEmail = formEmail.trim().toLowerCase()
         const user = await User.findOne({email: normalizedEmail})
         if(!user) {
-            return res.status(402).json({ success: false, message: "Email is not registered" })
+            return res.status(401).json({ success: false, message: "Invalid email or password" })
         }
         
         const isMatching = await bcrypt.compare(formPassword, user.passwordHash)
         
         if(!isMatching) {
-            return res.status(403).json({ success: false, message: "Password is incorrect" })
+            return res.status(401).json({ success: false, message: "Invalid email or password" })
         }
         
         const token = jwt.sign({ id: user._id }, secret, { expiresIn: '7d' })
@@ -113,7 +113,7 @@ const logout = async (req, res) => {
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
@@ -163,12 +163,12 @@ const verifyOtp = async (req, res) => {
             return res.status(200).json({ success: true, message: "Email already verified" })
         }
 
-        if(user.verifyOtp === '' || user.verifyOtp !== otp) {
-            return res.status(402).json({ success: false, message: "Invalid OTP" })
+        if(!user.verifyOtp || !(await bcrypt.compare(otp, user.verifyOtp))) {
+            return res.status(401).json({ success: false, message: "Invalid OTP" })
         }
         
         if(user.verifyOtpExpireAt < Date.now()) {
-            return res.status(403).json({ success: false, message: "OTP Expired" })
+            return res.status(401).json({ success: false, message: "OTP Expired" })
         }
         
         user.isEmailVerified = true
@@ -210,12 +210,12 @@ const sendPasswordResetOtp = async (req, res) => {
         const normalizedEmail = formEmail.trim().toLowerCase()
         const user = await User.findOne({ email: normalizedEmail })
         if(!user) {
-            return res.status(401).json({ success: false, message: "User not found" })
+            return res.status(200).json({ success: true, message: "If this email is registered, you will receive an OTP" })
         }
 
         const otp = String(Math.floor(100000 + Math.random() * 900000))
 
-        user.resetOtp = otp
+        user.resetOtp = await bcrypt.hash(otp, 10)
         user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000
 
         await user.save()
@@ -227,7 +227,7 @@ const sendPasswordResetOtp = async (req, res) => {
             text: `Your otp to reset the forgotten password is ${otp}`
         }
         await transporter.sendMail(mailOptions)
-        return res.status(200).json({ success: true, message: "Password Reset OTP is sent to user" })
+        return res.status(200).json({ success: true, message: "If this email is registered, you will receive an OTP" })
 
     } catch(error) {
         return res.status(500).json({ success: false, message: error.message })
@@ -248,12 +248,12 @@ const resetPassword = async (req, res) => {
             return res.status(400).json({ success: false, message: "User not found" })
         }
 
-        if(user.resetOtp === '' || user.resetOtp !== otp) {
+        if(!user.resetOtp || !(await bcrypt.compare(otp, user.resetOtp))) {
             return res.status(401).json({ success: false, message: "Invalid OTP" })
         }
         
         if(user.resetOtpExpireAt < Date.now()) {
-            return res.status(402).json({ success: false, message: "OTP Expired" })
+            return res.status(401).json({ success: false, message: "OTP Expired" })
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds)

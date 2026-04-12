@@ -48,13 +48,11 @@ function LoginForm({ className, ...props }) {
                 body: JSON.stringify({ formEmail, formPassword }),
             })
 
-            if (data.success) {
-                setAuthenticated(true)
-                const verified = Boolean(data.user?.isEmailVerified)
-                setIsEmailVerified(verified)
-                await refreshAuth()
-                navigate(verified ? '/' : '/verify-email')
-            }
+            setAuthenticated(true)
+            const verified = Boolean(data.user?.isEmailVerified)
+            setIsEmailVerified(verified)
+            await refreshAuth()
+            navigate(verified ? '/' : '/verify-email')
         } catch (error) {
             toast.error(error?.message || "Login failed. Please try again.")
         }

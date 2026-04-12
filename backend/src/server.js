@@ -20,7 +20,7 @@ app.set('trust proxy', 1)
 
 // API Endpoint
 app.get('/api/health', (req, res) => {
-    res.status(200).json({message: "ok", timestamp: new Date})
+    res.status(200).json({message: "ok", timestamp: new Date()})
 })
 
 app.use('/api/auth', authRouter)

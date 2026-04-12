@@ -13,7 +13,7 @@ const navItems = [
 ]
 
 function AppLayout() {
-    const { setAuthenticated } = useAuth()
+    const { setAuthenticated, setIsEmailVerified } = useAuth()
     const navigate = useNavigate()
 
     const handleLogout = async () => {
@@ -24,6 +24,7 @@ function AppLayout() {
             toast.error(error?.message || 'Failed to logout. Clearing session.')
         } finally {
             setAuthenticated(false)
+            setIsEmailVerified(false)
             navigate('/login', { replace: true })
         }
     }

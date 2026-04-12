@@ -32,7 +32,7 @@ function ForgotPasswordPage() {
                 body: JSON.stringify({ formEmail }),
             })
             setOtpSent(true)
-            toast.success(data.message || 'OTP sent successfully')
+            toast.success(data.message || 'If this email is registered, you will receive an OTP')
         } catch (error) {
             toast.error(error?.message || 'Failed to send OTP')
         } finally {
